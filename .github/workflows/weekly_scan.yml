@@ -1,0 +1,42 @@
+name: Weekly Drive Audit
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'  # Every Sunday at 8:30am India time
+  workflow_dispatch:       # Also allows manual trigger anytime
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client gspread
+
+      - name: Restore credentials
+        run: |
+          echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
+
+      - name: Restore token
+        run: |
+          python -c "
+          import base64, os
+          token = '${{ secrets.GOOGLE_TOKEN }}'
+          with open('token.pickle', 'wb') as f:
+              f.write(base64.b64decode(token))
+          "
+
+      - name: Run Drive Scanner
+        run: python drive_audit.py
+
+      - name: Run Report Writer
+        run: python write_report.py
