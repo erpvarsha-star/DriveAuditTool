@@ -2,8 +2,11 @@ name: Weekly Drive Audit
 
 on:
   schedule:
-    - cron: '0 3 * * 0'  # Every Sunday at 8:30am India time
-  workflow_dispatch:       # Also allows manual trigger anytime
+    - cron: '0 3 * * 0'  # Every Sunday 8:30am India time
+  workflow_dispatch:       # Manual trigger anytime
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   audit:
@@ -11,10 +14,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -27,10 +30,12 @@ jobs:
           echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
 
       - name: Restore token
+        env:
+          GOOGLE_TOKEN: ${{ secrets.GOOGLE_TOKEN }}
         run: |
           python -c "
           import base64, os
-          token = '${{ secrets.GOOGLE_TOKEN }}'
+          token = os.environ['GOOGLE_TOKEN']
           with open('token.pickle', 'wb') as f:
               f.write(base64.b64decode(token))
           "
