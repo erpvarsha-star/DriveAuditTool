@@ -7,6 +7,25 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from datetime import datetime, timezone
+# ═══════════════════════════════════════════════════════
+#  AUTH FUNCTION (Missing from your current file)
+# ═══════════════════════════════════════════════════════
+def authenticate():
+    creds = None
+    # TOKEN_FILE should be 'token.pickle'
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as f:
+            creds = pickle.load(f)
+    
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            # Note: Running in GitHub Actions requires a pre-generated token.pickle
+            # because an interactive browser login isn't possible there.
+            print("ERROR: No valid token.pickle found for GitHub Runner.")
+            return None
+    return creds
 
 # ═══════════════════════════════════════════════════════
 #  SETTINGS & FILTERS (Your Original Logic)
