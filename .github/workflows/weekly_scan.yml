@@ -13,17 +13,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ─── 1. Checkout ────────────────────────────────────────────────────────
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ─── 2. Python setup ────────────────────────────────────────────────────
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # ─── 3. Install dependencies ────────────────────────────────────────────
       - name: Install dependencies
         run: |
           pip install \
@@ -33,11 +30,9 @@ jobs:
             google-api-python-client \
             gspread
 
-      # ─── 4. Restore Google credentials ──────────────────────────────────────
       - name: Restore credentials
         run: echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
 
-      # ─── 5. Restore token.pickle [WARN-2: guard against missing/corrupt secret]
       - name: Restore token
         env:
           GOOGLE_TOKEN: ${{ secrets.GOOGLE_TOKEN }}
@@ -46,8 +41,7 @@ jobs:
           import base64, os, sys
           token = os.environ.get('GOOGLE_TOKEN', '')
           if not token:
-              sys.exit("ERROR: GOOGLE_TOKEN secret is missing or empty. "
-                       "Re-generate token.pickle locally and update the secret.")
+              sys.exit("ERROR: GOOGLE_TOKEN secret is missing or empty.")
           try:
               decoded = base64.b64decode(token)
           except Exception as e:
@@ -57,8 +51,7 @@ jobs:
           print("token.pickle restored successfully.")
           EOF
 
-      # ─── 6. Restore previous audit data for resume [BUG-1 / IMP-1] ─────────
-      - name: Restore previous audit data (for resume)
+      - name: Restore previous audit data
         uses: actions/cache@v4
         with:
           path: |
@@ -69,19 +62,17 @@ jobs:
           restore-keys: |
             audit-resume-
 
-      # ─── 7. Run Drive Scanner ───────────────────────────────────────────────
       - name: Run Drive Scanner
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         run: python drive_audit.py
 
-      # ─── 8. Run Report Writer ───────────────────────────────────────────────
       - name: Run Report Writer
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          INVENTORY_SHEET_ID: ${{ secrets.INVENTORY_SHEET_ID }}
         run: python write_report.py
 
-      # ─── 9. Save audit data as artifact (downloadable from Actions UI) ──────
       - name: Upload audit artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -94,27 +85,11 @@ jobs:
             ERP_Migration_Final_Report.csv
           retention-days: 30
 
-      # ─── 10. Notify on failure [WARN-2] ─────────────────────────────────────
       - name: Notify on failure
         if: failure()
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         run: |
-          python - <<'EOF'
-          import os, json, urllib.request
-          webhook = os.environ.get('SLACK_WEBHOOK', '')
-          if not webhook:
-              print("No SLACK_WEBHOOK set — skipping failure notification.")
-              exit(0)
-          payload = json.dumps({
-              "text": (
-                  ":x: *Drive Audit FAILED* — check "
-                  f"https://github.com/${{{{ github.repository }}}}/actions"
-              )
-          }).encode()
-          req = urllib.request.Request(
-              webhook, data=payload,
-              headers={'Content-Type': 'application/json'}
-          )
-          urllib.request.urlopen(req, timeout=10)
-          EOF
+          curl -s -X POST "$SLACK_WEBHOOK" \
+            -H 'Content-type: application/json' \
+            --data '{"text": ":x: Drive Audit FAILED — check GitHub Actions for details"}'
