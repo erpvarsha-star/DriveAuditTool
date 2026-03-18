@@ -1,65 +1,74 @@
 """
-STAGE 1 — DRIVE AUDIT ENGINE  (fully fixed + improved)
-Recursively scans all shared Google Drive folders, scores files
-for ERP migration readiness, and detects duplicates.
+STAGE 2 — REPORT WRITER  (cell-limit safe, v3)
+Reads audit_data.json and writes into Google Sheets without hitting
+the 10,000,000-cell limit.
 
-Fixes applied:
-  [BUG-1]  scanned_folders now persisted & restored on resume
-  [BUG-2]  bare except replaced with typed HttpError handling + quota backoff
-  [BUG-3]  'Finance & Accounts' category name corrected to 'Finance'
-  [IMP-1]  seen_hashes persisted so duplicate detection survives resume
-  [IMP-2]  Rate-limiting (0.5 s) between Sheets deep-scan calls
-  [IMP-3]  get_sheet_dependencies now scans ALL tabs, not just the first
-  [IMP-4]  mimeType stored in all_files so File Type column is populated
-  [WARN-1] Graceful quota / HttpError backoff in deep-scan
-  [WARN-2] Notification helper (calls notify.py on finish/fail)
+Root cause fix:
+  Never pass rows=len(files) to add_worksheet().
+  Google pre-allocates every row×col at creation time.
+  27,097 files × 12 cols × 12 tabs = way over 10M cells.
+  Fix: always create tabs with rows=1 and let append_rows() grow them.
 
-Run: python drive_audit.py
+Cell budget for 27,097 files:
+  Summary tab        ~30  rows × 3  cols =      90 cells
+  ERP Priority       ~500 rows × 12 cols =   6,000 cells  (high-score only)
+  Duplicates         varies    × 8  cols   (slim columns)
+  Full Inventory  → written to a SEPARATE Sheets file (INVENTORY_SHEET_ID)
 """
 
-import os
 import json
+import os
 import pickle
 import time
-import csv
-from datetime import datetime, timezone
+from datetime import datetime
 
+import gspread
 from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 # ═══════════════════════════════════════════════════════
 #  CONFIG
 # ═══════════════════════════════════════════════════════
 
-CREDENTIALS_FILE = 'credentials.json'
-TOKEN_FILE       = 'token.pickle'
-DATA_FILE        = 'audit_data.json'
-HASHES_FILE      = 'seen_hashes.json'      # [IMP-1] persisted hashes
-SCANNED_FILE     = 'scanned_folders.json'  # [BUG-1] persisted folder set
-REPORT_FILE      = 'ERP_Migration_Final_Report.csv'
+SHEET_ID           = '13gHBHZz1MbvDMGtE3fAHJWyhTbnoNCcnZit5Rmh-L80'
+INVENTORY_SHEET_ID = os.environ.get('INVENTORY_SHEET_ID', '')  # separate sheet for full data
 
-SCOPES = [
-    'https://www.googleapis.com/auth/drive.readonly',
-    'https://www.googleapis.com/auth/spreadsheets.readonly',
+DATA_FILE  = 'audit_data.json'
+TOKEN_FILE = 'token.pickle'
+BATCH_SIZE = 500
+
+TAB_INIT_ROWS = 1    # KEY FIX: never pre-allocate — append_rows grows the sheet
+TAB_INIT_COLS = 12
+
+FULL_HEADERS = [
+    'File Name', 'Status', 'Score', 'ERP Ready', 'Category',
+    'File Type', 'Last Modified', 'Owner', 'Dependencies',
+    'Folder Path', 'Duplicate Notes', 'Link',
 ]
 
-# Deep-scan rate limit: 2 req/sec stays under Sheets quota of 60/min
-SHEETS_CALL_DELAY = 0.5   # seconds between Sheets API calls
+DUP_HEADERS = [
+    'File Name', 'Status', 'Category', 'File Type',
+    'Last Modified', 'Owner', 'Duplicate Notes', 'Folder Path',
+]
 
-# Category keywords — keys must match exactly what calculate_utility() checks
-CATEGORY_KEYWORDS = {
-    'Plant Operations': ['plant', 'production', 'ppc', 'dispatch',
-                         'press shop', 'hammer', 'die shop', 'stores'],
-    'Quality & QMS':   ['qms', 'quality', 'control plan', 'audit',
-                         'iso', 'iatf', 'calibration', 'vfqa'],
-    'HR & Admin':      ['hr', 'salary', 'leave', 'skill matrix',
-                         'attendance', 'payroll'],
-    'Commercial':      ['purchase', 'procurement', 'rfq', 'quotation',
-                         'vendor', 'po'],
-    'Finance':         ['accounts', 'ledger', 'balance sheet',
-                         'gst', '2025-2026', '2024-2025'],
+MIME_LABELS = {
+    'application/vnd.google-apps.spreadsheet':  'Sheet',
+    'application/vnd.google-apps.document':     'Doc',
+    'application/vnd.google-apps.presentation': 'Slides',
+    'application/vnd.google-apps.folder':       'Folder',
+    'application/pdf':                           'PDF',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':         'Excel',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document':   'Word',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PPT',
+    'image/jpeg': 'JPEG', 'image/png': 'PNG',
+}
+
+FMT = {
+    'blue':  {'backgroundColor': {'red': 0.1,  'green': 0.2, 'blue': 0.4},
+              'textFormat': {'bold': True, 'foregroundColor': {'red':1,'green':1,'blue':1}}},
+    'green': {'backgroundColor': {'red': 0.0,  'green': 0.5, 'blue': 0.2},
+              'textFormat': {'bold': True, 'foregroundColor': {'red':1,'green':1,'blue':1}}},
+    'red':   {'backgroundColor': {'red': 0.55, 'green': 0.1, 'blue': 0.1},
+              'textFormat': {'bold': True, 'foregroundColor': {'red':1,'green':1,'blue':1}}},
 }
 
 # ═══════════════════════════════════════════════════════
@@ -71,265 +80,259 @@ def authenticate():
     if os.path.exists(TOKEN_FILE):
         with open(TOKEN_FILE, 'rb') as f:
             creds = pickle.load(f)
-
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            print("ERROR: No valid token.pickle found. "
-                  "Generate one locally and store as GOOGLE_TOKEN secret.")
-            return None
+            raise RuntimeError("No valid token.pickle — run token_refresh.py locally.")
     return creds
 
 # ═══════════════════════════════════════════════════════
-#  INTELLIGENCE ENGINE
+#  SHEET HELPERS
 # ═══════════════════════════════════════════════════════
 
-def calculate_utility(name, modified_date, deps, category):
-    """The Potato Principle: identify the 20 % high-value files."""
-    score = 0
-    name_low = name.lower()
-
-    # 1. Recency (last 60 days = +35)
-    try:
-        mod = datetime.fromisoformat(modified_date.replace('Z', '+00:00'))
-        if (datetime.now(timezone.utc) - mod).days < 60:
-            score += 35
-    except Exception:
-        pass
-
-    # 2. Functional criticality (+30)
-    if any(k in name_low for k in ['master', 'database', 'final', '2026', '25-26']):
-        score += 30
-
-    # 3. Has cross-sheet dependencies (+25)
-    if deps:
-        score += 25
-
-    # 4. Domain priority — [BUG-3] was 'Finance & Accounts', now matches key
-    if category in ['Plant Operations', 'Finance']:
-        score += 10
-
-    return min(score, 100)
-
-
-def get_sheet_dependencies(sheets_svc, file_id):
+def get_or_create_tab(spreadsheet, title, cols=TAB_INIT_COLS):
     """
-    [IMP-3] Scan ALL tabs (up to 10) for IMPORTRANGE / QUERY formulas.
-    [BUG-2] Typed exception handling with quota backoff.
+    ROOT CAUSE FIX: create with rows=1, not rows=len(data).
+    Google pre-allocates rows*cols cells at sheet creation.
+    append_rows() grows the sheet dynamically at zero upfront cost.
     """
-    found = set()
     try:
-        meta = sheets_svc.spreadsheets().get(
-            spreadsheetId=file_id,
-            fields='sheets.properties.title'
-        ).execute()
-        time.sleep(SHEETS_CALL_DELAY)   # [IMP-2] rate limit
+        ws = spreadsheet.worksheet(title)
+        print(f"  📋 Reusing: {title}")
+        return ws
+    except gspread.exceptions.WorksheetNotFound:
+        ws = spreadsheet.add_worksheet(title=title, rows=TAB_INIT_ROWS, cols=cols)
+        print(f"  ➕ Created: {title}")
+        return ws
 
-        tabs = [s['properties']['title'] for s in meta.get('sheets', [])]
-        # Limit to first 10 tabs to avoid runaway quota use
-        for tab in tabs[:10]:
-            try:
-                resp = sheets_svc.spreadsheets().values().get(
-                    spreadsheetId=file_id,
-                    range=f"'{tab}'!A1:Z100"
-                ).execute()
-                time.sleep(SHEETS_CALL_DELAY)   # [IMP-2]
-                flat = str(resp.get('values', [])).lower()
-                if 'importrange' in flat:
-                    found.add('IMPORTRANGE')
-                if 'query(' in flat:
-                    found.add('QUERY')
-            except HttpError as e:
-                if e.resp.status == 429:
-                    print(f"  ⏳ Quota hit on tab '{tab}' of {file_id} — waiting 60 s")
-                    time.sleep(60)
-                else:
-                    print(f"  ⚠ Sheet tab error ({e.resp.status}) on {file_id}/{tab}")
-            except Exception as e:
-                print(f"  ⚠ Unexpected error scanning tab '{tab}' of {file_id}: {e}")
 
-    except HttpError as e:
-        if e.resp.status == 429:
-            print(f"  ⏳ Quota hit fetching sheet meta {file_id} — waiting 60 s")
-            time.sleep(60)
-        else:
-            print(f"  ⚠ Sheet meta error ({e.resp.status}) for {file_id}: {e}")
-    except Exception as e:
-        print(f"  ⚠ Cannot open sheet {file_id}: {e}")
+def safe_clear(ws):
+    ws.clear()
+    time.sleep(0.5)
 
-    return list(found)
+
+def write_in_batches(ws, rows):
+    total = len(rows)
+    if total == 0:
+        print("    (no rows)")
+        return
+    for i in range(0, total, BATCH_SIZE):
+        chunk = rows[i: i + BATCH_SIZE]
+        ws.append_rows(chunk, value_input_option='USER_ENTERED')
+        print(f"    ↳ {min(i + BATCH_SIZE, total):,} / {total:,}")
+        time.sleep(1)
 
 # ═══════════════════════════════════════════════════════
-#  PERSISTENCE HELPERS  [BUG-1] [IMP-1]
+#  ROW CONVERTERS
 # ═══════════════════════════════════════════════════════
 
-def save_progress(all_files, seen_hashes, scanned_folders):
-    with open(DATA_FILE,    'w') as f: json.dump(all_files,          f)
-    with open(HASHES_FILE,  'w') as f: json.dump(seen_hashes,        f)
-    with open(SCANNED_FILE, 'w') as f: json.dump(list(scanned_folders), f)
+def _mime(r):
+    raw = r.get('Type', r.get('mimeType', r.get('file_type', '')))
+    return MIME_LABELS.get(raw, raw.split('/')[-1] if raw else '')
 
 
-def load_progress():
-    all_files      = []
-    seen_hashes    = {}
-    scanned_folders = set()
+def to_full_row(r):
+    return [
+        r.get('Name',         r.get('name',         '')),
+        r.get('Status',       r.get('status',        '')),
+        r.get('Score',        r.get('score',          0)),
+        r.get('ERP_Ready',    r.get('erp_ready',    'NO')),
+        r.get('Category',     r.get('category',      '')),
+        _mime(r),
+        r.get('Modified',     r.get('modified',      ''))[:10],
+        r.get('Owner',        r.get('owner',         '')),
+        r.get('Dependencies', r.get('dependencies',  '')),
+        r.get('Folder_Path',  r.get('folder_path',   '')),
+        r.get('Notes',        r.get('duplicate_of',  '')),
+        r.get('Link',         r.get('link',          '')),
+    ]
 
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, 'r') as f:
-            all_files = json.load(f)
-        print(f"♻️  Resuming: {len(all_files)} files already loaded.")
 
-    if os.path.exists(HASHES_FILE):      # [IMP-1]
-        with open(HASHES_FILE, 'r') as f:
-            seen_hashes = json.load(f)
-        print(f"♻️  Resuming: {len(seen_hashes)} known fingerprints loaded.")
-
-    if os.path.exists(SCANNED_FILE):     # [BUG-1]
-        with open(SCANNED_FILE, 'r') as f:
-            scanned_folders = set(json.load(f))
-        print(f"♻️  Resuming: {len(scanned_folders)} folders already scanned.")
-
-    return all_files, seen_hashes, scanned_folders
+def to_dup_row(r):
+    return [
+        r.get('Name',         r.get('name',         '')),
+        r.get('Status',       r.get('status',        '')),
+        r.get('Category',     r.get('category',      '')),
+        _mime(r),
+        r.get('Modified',     r.get('modified',      ''))[:10],
+        r.get('Owner',        r.get('owner',         '')),
+        r.get('Notes',        r.get('duplicate_of',  '')),
+        r.get('Folder_Path',  r.get('folder_path',   '')),
+    ]
 
 # ═══════════════════════════════════════════════════════
-#  RECURSIVE CORE
+#  CELL BUDGET REPORT
 # ═══════════════════════════════════════════════════════
 
-def scan_folder(drive_svc, sheets_svc, folder_id, folder_path,
-                all_files, seen_hashes, scanned_folders, depth=0):
+def print_cell_budget(files):
+    total = len(files)
+    erp   = sum(1 for f in files if f.get('ERP_Ready','NO') == 'YES')
+    dups  = sum(1 for f in files if f.get('Status','')      == 'DUPLICATE')
 
-    if folder_id in scanned_folders:
+    summary_cells = 30 * 3
+    erp_cells     = (erp  + 1) * 12
+    dup_cells     = (dups + 1) * 8
+    dash_total    = summary_cells + erp_cells + dup_cells
+    inv_cells     = (total + 1) * 12
+
+    print("\n📐 Cell budget")
+    print(f"   Summary     : {summary_cells:>10,}")
+    print(f"   ERP list    : {erp_cells:>10,}  ({erp:,} files × 12 cols)")
+    print(f"   Duplicates  : {dup_cells:>10,}  ({dups:,} files × 8 cols)")
+    print(f"   ─────────────────────────────────────")
+    print(f"   Dashboard   : {dash_total:>10,}  {'✅ safe' if dash_total < 10_000_000 else '❌ over limit'}")
+    print(f"   Full inventory → separate file: {inv_cells:,} cells")
+    print()
+
+# ═══════════════════════════════════════════════════════
+#  TAB WRITERS
+# ═══════════════════════════════════════════════════════
+
+def write_summary(spreadsheet, files):
+    total     = len(files)
+    dups      = sum(1 for f in files if f.get('Status','')      == 'DUPLICATE')
+    erp_ready = sum(1 for f in files if f.get('ERP_Ready','NO') == 'YES')
+    bloat     = round(dups / total * 100, 1) if total else 0
+
+    cats = {}
+    for f in files:
+        c = f.get('Category', f.get('category', 'Other'))
+        cats[c] = cats.get(c, 0) + 1
+
+    rows = [
+        ['MIGRATION READINESS SUMMARY', '', datetime.now().strftime('%Y-%m-%d %H:%M')],
+        [''],
+        ['METRIC',                 'COUNT',              'ACTION'],
+        ['Total files scanned',    total,                'Full inventory → separate sheet'],
+        ['Duplicates found',       dups,                 f'Dedup potential: {bloat} %'],
+        ['ERP-ready (score > 65)', erp_ready,            'Migrate by April 1st'],
+        ['Low value / archive',    total-erp_ready-dups, 'Move to 2025 Archive folder'],
+        [''],
+        ['CATEGORY BREAKDOWN', 'FILES', ''],
+    ] + [[f'  {c}', n, ''] for c, n in sorted(cats.items(), key=lambda x: -x[1])]
+
+    print('\nWriting Executive Summary...')
+    ws = get_or_create_tab(spreadsheet, '📊 Summary', cols=3)
+    safe_clear(ws)
+    ws.append_rows(rows, value_input_option='USER_ENTERED')
+    ws.format('A1:C1', FMT['blue'])
+    ws.format('A3:C3', FMT['blue'])
+    ws.format('A9:C9', FMT['blue'])
+
+
+def write_erp_priority(spreadsheet, files):
+    priority = sorted(
+        [f for f in files if f.get('ERP_Ready','NO') == 'YES'],
+        key=lambda x: x.get('Score', x.get('score', 0)),
+        reverse=True,
+    )
+    print(f'\nWriting ERP Priority ({len(priority):,} files)...')
+    ws = get_or_create_tab(spreadsheet, '🚀 ERP Migration List')
+    safe_clear(ws)
+    ws.append_row(FULL_HEADERS)
+    ws.format('A1:L1', FMT['green'])
+    write_in_batches(ws, [to_full_row(f) for f in priority])
+
+
+def write_duplicates(spreadsheet, files):
+    dupes = [f for f in files if f.get('Status','') == 'DUPLICATE']
+    print(f'\nWriting Duplicates ({len(dupes):,} files, 8-col slim format)...')
+    ws = get_or_create_tab(spreadsheet, '🔁 Duplicates', cols=8)
+    safe_clear(ws)
+    ws.append_row(DUP_HEADERS)
+    ws.format('A1:H1', FMT['red'])
+    write_in_batches(ws, [to_dup_row(f) for f in dupes])
+
+
+def write_full_inventory(gc, files):
+    """Full inventory → separate Sheet so dashboard never hits cell limit."""
+    if not INVENTORY_SHEET_ID:
+        print('\nℹ️  INVENTORY_SHEET_ID not set — skipping full inventory.')
+        print('   Steps to enable:')
+        print('   1. Create a new blank Google Sheet')
+        print('   2. Copy its ID from the URL')
+        print('   3. Add GitHub secret: INVENTORY_SHEET_ID=<id>')
         return
 
+    print(f'\nWriting Full Inventory ({len(files):,} files) → separate sheet...')
     try:
-        page_token = None
-        while True:
-            resp = drive_svc.files().list(
-                q=f"'{folder_id}' in parents and trashed=false",
-                fields='nextPageToken, files(id,name,mimeType,size,'
-                       'modifiedTime,owners,md5Checksum)',
-                pageSize=100,
-                pageToken=page_token
-            ).execute()
-
-            for f in resp.get('files', []):
-                fid       = f['id']
-                name      = f['name']
-                mime      = f['mimeType']
-                checksum  = f.get('md5Checksum')
-
-                # Recurse into sub-folders
-                if mime == 'application/vnd.google-apps.folder':
-                    scan_folder(drive_svc, sheets_svc, fid,
-                                f"{folder_path} > {name}",
-                                all_files, seen_hashes, scanned_folders, depth + 1)
-                    continue
-
-                # ── Duplicate detection ──────────────────────────────────
-                fingerprint = checksum if checksum else f"{name}_{f.get('size', 0)}"
-                if fingerprint in seen_hashes:
-                    status    = "DUPLICATE"
-                    dup_notes = f"Master in: {seen_hashes[fingerprint]['path']}"
-                else:
-                    status    = "ORIGINAL"
-                    dup_notes = ""
-                    seen_hashes[fingerprint] = {'name': name, 'path': folder_path}
-
-                # ── Categorise ───────────────────────────────────────────
-                category = "Other"
-                for cat, keys in CATEGORY_KEYWORDS.items():
-                    if any(k in (name + folder_path).lower() for k in keys):
-                        category = cat
-                        break
-
-                # ── Deep scan (originals only) ───────────────────────────
-                deps = []
-                if status == "ORIGINAL" and 'spreadsheet' in mime:
-                    deps = get_sheet_dependencies(sheets_svc, fid)
-
-                score = calculate_utility(
-                    name, f.get('modifiedTime', ''), deps, category
-                ) if status == "ORIGINAL" else 0
-
-                all_files.append({
-                    'Name':         name,
-                    'Category':     category,
-                    'Status':       status,
-                    'Score':        score,
-                    'Type':         mime,           # [IMP-4] was missing
-                    'Folder_Path':  folder_path,
-                    'Dependencies': ", ".join(deps),
-                    'Modified':     f.get('modifiedTime', '')[:10],
-                    'Owner':        (f.get('owners') or [{}])[0].get('emailAddress', ''),
-                    'Notes':        dup_notes,
-                    'ERP_Ready':    "YES" if score > 65 else "NO",
-                })
-
-                icon = '✅' if status == 'ORIGINAL' else '🔁'
-                print(f"{'  ' * depth}{icon} {score:02} | {name[:55]}")
-
-            page_token = resp.get('nextPageToken')
-            if not page_token:
-                break
-
-        scanned_folders.add(folder_id)
-        save_progress(all_files, seen_hashes, scanned_folders)  # [BUG-1] save after every folder
-
-    except HttpError as e:
-        print(f"Drive API error in '{folder_path}': {e}")
-    except Exception as e:
-        print(f"Unexpected error in '{folder_path}': {e}")
-
-# ═══════════════════════════════════════════════════════
-#  CSV EXPORT
-# ═══════════════════════════════════════════════════════
-
-def export_csv(all_files):
-    if not all_files:
-        print("⚠ No files to export.")
+        inv = gc.open_by_key(INVENTORY_SHEET_ID)
+    except gspread.exceptions.SpreadsheetNotFound:
+        print(f'   ❌ Sheet not found: {INVENTORY_SHEET_ID}')
         return
-    with open(REPORT_FILE, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=all_files[0].keys())
-        writer.writeheader()
-        writer.writerows(all_files)
-    print(f"📄 CSV saved → {REPORT_FILE}")
+
+    ws = get_or_create_tab(inv, 'Full Inventory')
+    safe_clear(ws)
+    ws.append_row(FULL_HEADERS)
+    ws.format('A1:L1', FMT['blue'])
+    write_in_batches(ws, [to_full_row(f) for f in files])
+    print('   ✅ Full inventory written.')
+
+# ═══════════════════════════════════════════════════════
+#  NOTIFICATION
+# ═══════════════════════════════════════════════════════
+
+def notify(message, status='success'):
+    import urllib.request
+    webhook = os.environ.get('SLACK_WEBHOOK', '')
+    if not webhook:
+        return
+    icon    = '✅' if status == 'success' else '❌'
+    payload = json.dumps({'text': f'{icon} Drive Audit — {message}'}).encode()
+    try:
+        req = urllib.request.Request(
+            webhook, data=payload,
+            headers={'Content-Type': 'application/json'},
+        )
+        urllib.request.urlopen(req, timeout=10)
+        print('📣 Slack notified.')
+    except Exception as e:
+        print(f'⚠ Slack failed (non-fatal): {e}')
 
 # ═══════════════════════════════════════════════════════
 #  MAIN
 # ═══════════════════════════════════════════════════════
 
 def main():
-    print("🔐 Authenticating...")
+    print('=' * 60)
+    print('   STAGE 2 — Report Writer')
+
+    if not os.path.exists(DATA_FILE):
+        raise SystemExit(f"❌ {DATA_FILE} not found — run drive_audit.py first.")
+
+    with open(DATA_FILE) as f:
+        all_files = json.load(f)
+    print(f'📊 Loaded {len(all_files):,} files from {DATA_FILE}')
+
+    print_cell_budget(all_files)
+
     creds = authenticate()
-    if not creds:
-        raise SystemExit("Authentication failed — check token.pickle / secret.")
+    gc    = gspread.authorize(creds)
 
-    drive_svc  = build('drive',  'v3', credentials=creds)
-    sheets_svc = build('sheets', 'v4', credentials=creds)
+    try:
+        spreadsheet = gc.open_by_key(SHEET_ID)
+        print(f'Writing to: {spreadsheet.title}')
+        print('=' * 60)
 
-    all_files, seen_hashes, scanned_folders = load_progress()
+        write_summary(spreadsheet, all_files)
+        write_erp_priority(spreadsheet, all_files)
+        write_duplicates(spreadsheet, all_files)
+        write_full_inventory(gc, all_files)
 
-    print("🚀 Starting Deep Industrial Drive Audit...")
+        total     = len(all_files)
+        erp_ready = sum(1 for f in all_files if f.get('ERP_Ready','NO') == 'YES')
+        dups      = sum(1 for f in all_files if f.get('Status','')      == 'DUPLICATE')
+        msg = (f"{total:,} files | {erp_ready:,} ERP-ready | "
+               f"{dups:,} duplicates | {datetime.now().strftime('%Y-%m-%d')}")
 
-    # Shared-with-me folders
-    results = drive_svc.files().list(
-        q="sharedWithMe=true and mimeType='application/vnd.google-apps.folder'",
-        fields='files(id,name)'
-    ).execute()
+        print(f'\n✅ Done — {msg}')
+        notify(msg, 'success')
 
-    for folder in results.get('files', []):
-        print(f"\n📁 Top-level: {folder['name']}")
-        scan_folder(drive_svc, sheets_svc,
-                    folder['id'], folder['name'],
-                    all_files, seen_hashes, scanned_folders)
-
-    export_csv(all_files)
-
-    total = len(all_files)
-    dups  = sum(1 for f in all_files if f['Status'] == 'DUPLICATE')
-    ready = sum(1 for f in all_files if f['ERP_Ready'] == 'YES')
-    print(f"\n✅ Audit complete — {total} files | {dups} duplicates | {ready} ERP-ready")
+    except Exception as e:
+        print(f'\n❌ Failed: {e}')
+        notify(f'FAILED: {e}', 'error')
+        raise
 
 
 if __name__ == '__main__':
