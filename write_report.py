@@ -29,7 +29,7 @@ from google.auth.transport.requests import Request
 #  CONFIG
 # ═══════════════════════════════════════════════════════
 
-SHEET_ID           = '13gHBHZz1MbvDMGtE3fAHJWyhTbnoNCcnZit5Rmh-L80'
+SHEET_ID           = '1yrjuBo9LJyR41cO0AZzkWJQQ_BAtYhTJ0Y0VgLr4eog'
 INVENTORY_SHEET_ID = os.environ.get('INVENTORY_SHEET_ID', '')  # separate sheet for full data
 
 DATA_FILE  = 'audit_data.json'
