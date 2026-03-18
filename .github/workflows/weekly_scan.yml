@@ -48,9 +48,10 @@ jobs:
             audit_data.json
             seen_hashes.json
             scanned_folders.json
-          key: audit-resume-${{ github.run_number }}
+          key: audit-resume-cache
           restore-keys: |
-            audit-resume-
+            audit-resume-cache
+  
 
       - name: Run Drive Scanner
         env:
