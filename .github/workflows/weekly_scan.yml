@@ -2,8 +2,8 @@ name: Weekly Drive Audit
 
 on:
   schedule:
-    - cron: '0 3 * * 0'   # Every Sunday 08:30 IST (UTC+5:30 = 03:00 UTC)
-  workflow_dispatch:        # Manual trigger anytime
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -11,7 +11,6 @@ env:
 jobs:
   audit:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,12 +22,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install \
-            google-auth \
-            google-auth-oauthlib \
-            google-auth-httplib2 \
-            google-api-python-client \
-            gspread
+          pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client gspread
 
       - name: Restore credentials
         run: echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
@@ -42,12 +36,8 @@ jobs:
           token = os.environ.get('GOOGLE_TOKEN', '')
           if not token:
               sys.exit("ERROR: GOOGLE_TOKEN secret is missing or empty.")
-          try:
-              decoded = base64.b64decode(token)
-          except Exception as e:
-              sys.exit(f"ERROR: GOOGLE_TOKEN is not valid base64: {e}")
           with open('token.pickle', 'wb') as f:
-              f.write(decoded)
+              f.write(base64.b64decode(token))
           print("token.pickle restored successfully.")
           EOF
 
@@ -92,4 +82,4 @@ jobs:
         run: |
           curl -s -X POST "$SLACK_WEBHOOK" \
             -H 'Content-type: application/json' \
-            --data '{"text": ":x: Drive Audit FAILED — check GitHub Actions for details"}'
+            --data '{"text": ":x: Drive Audit FAILED — check GitHub Actions"}'
