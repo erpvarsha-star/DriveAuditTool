@@ -2,7 +2,7 @@ name: Weekly Drive Audit
 
 on:
   schedule:
-    - cron: '0 3 * * 0'
+    - cron: '0 3 * * 0'   # Every Sunday 08:30 IST
   workflow_dispatch:
 
 env:
@@ -48,10 +48,10 @@ jobs:
             audit_data.json
             seen_hashes.json
             scanned_folders.json
+            ai_analysis.json
           key: audit-resume-cache
           restore-keys: |
             audit-resume-cache
-  
 
       - name: Run Drive Scanner
         env:
@@ -64,6 +64,12 @@ jobs:
           INVENTORY_SHEET_ID: ${{ secrets.INVENTORY_SHEET_ID }}
         run: python write_report.py
 
+      - name: Run AI Analyser
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          INVENTORY_SHEET_ID: ${{ secrets.INVENTORY_SHEET_ID }}
+        run: python ai_analyser.py
+
       - name: Upload audit artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -73,7 +79,9 @@ jobs:
             audit_data.json
             seen_hashes.json
             scanned_folders.json
+            ai_analysis.json
             ERP_Migration_Final_Report.csv
+            AI_ERP_Intelligence_Report.csv
           retention-days: 30
 
       - name: Notify on failure
