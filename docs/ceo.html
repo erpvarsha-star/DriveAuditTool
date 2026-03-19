@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VFPL CEO Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #22263a;
+    --text: #e8eaf6; --text2: #9fa8c7; --text3: #5c6491;
+    --green: #00c853; --green2: #1b5e20; --green3: #00e676;
+    --red: #ff1744; --red2: #7f0000; --red3: #ff5252;
+    --amber: #ffd600; --blue: #448aff; --grey: #546e7a;
+    --border: rgba(255,255,255,0.08);
+    --card: #1a1d27; --card2: #22263a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-badge { width: 36px; height: 36px; background: linear-gradient(135deg, #448aff, #7c4dff); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .logo-text { font-size: 16px; font-weight: 600; }
+  .logo-sub  { font-size: 11px; color: var(--text2); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .last-updated { font-size: 11px; color: var(--text3); }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* TIME TABS */
+  .time-tabs { display: flex; gap: 4px; background: var(--bg3); border-radius: 8px; padding: 3px; }
+  .time-tab { padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--text2); border: none; background: transparent; transition: all .15s; }
+  .time-tab.active { background: var(--blue); color: #fff; }
+
+  /* VIEW TABS */
+  .view-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--bg2); padding: 0 20px; }
+  .view-tab { padding: 12px 20px; font-size: 13px; cursor: pointer; color: var(--text2); border: none; background: transparent; border-bottom: 2px solid transparent; transition: all .15s; }
+  .view-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 500; }
+
+  /* MAIN */
+  .main { padding: 16px 20px; max-width: 1400px; margin: 0 auto; }
+  .view { display: none; } .view.active { display: block; }
+
+  /* ALERTS */
+  .alerts { margin-bottom: 16px; }
+  .alert-item { background: rgba(255,23,68,0.12); border: 1px solid rgba(255,23,68,0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .alert-type { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: var(--red); color: #fff; }
+  .alert-type.warn { background: var(--amber); color: #000; }
+
+  /* METRIC CARDS */
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .metric-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; position: relative; overflow: hidden; }
+  .metric-card.green { border-color: rgba(0,200,83,0.3); }
+  .metric-card.red   { border-color: rgba(255,23,68,0.3); }
+  .metric-card.grey  { border-color: var(--border); }
+  .metric-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .metric-value { font-size: 32px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+  .metric-value.green { color: var(--green3); }
+  .metric-value.red   { color: var(--red3); }
+  .metric-value.grey  { color: var(--text2); }
+  .metric-sub { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+  .metric-bar-bg { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .metric-bar-fill { height: 100%; border-radius: 2px; transition: width .5s; }
+  .metric-bar-fill.green { background: var(--green); }
+  .metric-bar-fill.red   { background: var(--red); }
+  .metric-bar-fill.grey  { background: var(--grey); }
+  .metric-target { font-size: 11px; color: var(--text3); margin-top: 6px; }
+  .status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .status-pill.green { background: rgba(0,200,83,0.15); color: var(--green3); }
+  .status-pill.red   { background: rgba(255,23,68,0.15); color: var(--red3); }
+  .status-pill.grey  { background: rgba(84,110,122,0.15); color: var(--text2); }
+  .trend { font-size: 18px; margin-left: 4px; }
+
+  /* SECTION HEADER */
+  .section-header { font-size: 13px; font-weight: 600; color: var(--text2); margin: 20px 0 10px; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* VF TABLE */
+  .vf-table { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+  .vf-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .vf-table th { background: var(--bg3); padding: 10px 14px; text-align: left; font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; font-weight: 500; }
+  .vf-table td { padding: 9px 14px; border-top: 1px solid var(--border); }
+  .vf-table tr:hover td { background: var(--bg3); }
+  .pct-bar { display: inline-block; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
+
+  /* RM GRADES TABLE */
+  .grades-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 20px; }
+  .grade-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .grade-name { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .grade-val  { font-size: 20px; font-weight: 700; }
+  .grade-sub  { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  /* SPARKLINE */
+  .sparkline-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+  .sparkline-title { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+  canvas { width: 100%; height: 80px; }
+
+  /* DEPT TABLE */
+  .dept-table { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .dept-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .dept-table th { background: var(--bg3); padding: 9px 14px; text-align: left; font-size: 11px; color: var(--text2); text-transform: uppercase; }
+  .dept-table td { padding: 8px 14px; border-top: 1px solid var(--border); }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 60px; color: var(--text2); }
+  .loading-spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* FOOTER */
+  .footer { text-align: center; padding: 20px; font-size: 11px; color: var(--text3); border-top: 1px solid var(--border); margin-top: 20px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .header { flex-wrap: wrap; gap: 8px; }
+    .metrics-grid { grid-template-columns: 1fr; }
+    .main { padding: 12px; }
+    .time-tabs { width: 100%; }
+    .time-tab { flex: 1; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-badge">VF</div>
+    <div>
+      <div class="logo-text">VFPL CEO Dashboard</div>
+      <div class="logo-sub">Varsha Forgings Pvt. Ltd.</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="time-tabs">
+      <button class="time-tab active" onclick="setTime('today')">Today</button>
+      <button class="time-tab" onclick="setTime('7d')">7 Days</button>
+      <button class="time-tab" onclick="setTime('30d')">30 Days</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div class="live-dot"></div>
+      <div class="last-updated" id="last-updated">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW TABS -->
+<div class="view-tabs">
+  <button class="view-tab active" onclick="setView('management')">📊 Management</button>
+  <button class="view-tab" onclick="setView('operations')">🏭 Operations</button>
+  <button class="view-tab" onclick="setView('hr')">👥 HR</button>
+</div>
+
+<div class="main">
+  <div id="loading" class="loading">
+    <div class="loading-spinner"></div>
+    <div>Loading live data...</div>
+  </div>
+
+  <!-- MANAGEMENT VIEW -->
+  <div class="view" id="view-management">
+    <div class="alerts" id="alerts-container"></div>
+    <div class="metrics-grid" id="mgmt-metrics"></div>
+    <div class="section-header">VF Wise Rejection</div>
+    <div class="vf-table" id="vf-rejection-table"></div>
+    <div class="section-header">MTD Revenue Trend</div>
+    <div class="sparkline-wrap">
+      <div class="sparkline-title">Daily Revenue (₹ Lakhs)</div>
+      <canvas id="revenue-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- OPERATIONS VIEW -->
+  <div class="view" id="view-operations">
+    <div class="section-header">RM Stock by Grade</div>
+    <div class="grades-grid" id="rm-grades"></div>
+    <div class="section-header">Production Summary</div>
+    <div class="metrics-grid" id="ops-metrics"></div>
+  </div>
+
+  <!-- HR VIEW -->
+  <div class="view" id="view-hr">
+    <div class="metrics-grid" id="hr-metrics"></div>
+    <div class="section-header">Department Wise Manpower</div>
+    <div class="dept-table" id="dept-table"></div>
+  </div>
+</div>
+
+<div class="footer" id="footer">Last updated: —</div>
+
+<script>
+let DATA        = null;
+let currentTime = 'today';
+let currentView = 'management';
+
+// ── Fetch data ──────────────────────────────────────────
+async function loadData() {
+  try {
+    const r = await fetch('ceo_data.json?t=' + Date.now());
+    if (!r.ok) throw new Error('Cannot load ceo_data.json');
+    DATA = await r.json();
+    document.getElementById('loading').style.display = 'none';
+    render();
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      `<div style="color:var(--red3)">⚠ Cannot load data<br><small>${e.message}</small><br><br>` +
+      `<small style="color:var(--text3)">Run ceo_dashboard_writer.py to generate ceo_data.json</small></div>`;
+  }
+}
+
+// ── Helpers ─────────────────────────────────────────────
+const fmt  = n => new Intl.NumberFormat('en-IN').format(Math.round(n));
+const fmtL = n => (n/100000).toFixed(1) + ' L';
+const fmtC = n => (n/10000000).toFixed(2) + ' Cr';
+const pct  = (v,t) => t > 0 ? Math.min(Math.round(v/t*100),100) : 0;
+
+function statusClass(s) {
+  return (s||'grey').toLowerCase();
+}
+
+function trendIcon(t) {
+  if (t === 'UP')   return '<span class="trend" style="color:var(--green3)">↑</span>';
+  if (t === 'DOWN') return '<span class="trend" style="color:var(--red3)">↓</span>';
+  return '<span class="trend" style="color:var(--text2)">→</span>';
+}
+
+function metricCard(label, value, sub, status, barPct, target, icon) {
+  const sc = statusClass(status);
+  return `
+    <div class="metric-card ${sc}">
+      <div class="metric-label">${icon || ''} ${label}
+        <span class="status-pill ${sc}">${status || 'N/A'}</span>
+      </div>
+      <div class="metric-value ${sc}">${value}</div>
+      <div class="metric-sub">${sub || ''}</div>
+      <div class="metric-bar-bg">
+        <div class="metric-bar-fill ${sc}" style="width:${barPct||0}%"></div>
+      </div>
+      <div class="metric-target">${target || ''}</div>
+    </div>`;
+}
+
+// ── Render ───────────────────────────────────────────────
+function render() {
+  if (!DATA) return;
+  const m = DATA.metrics;
+  const t = DATA.targets;
+
+  document.getElementById('last-updated').textContent = DATA.generated_ist || '—';
+  document.getElementById('footer').textContent = 'Last updated: ' + (DATA.generated_ist || '—');
+
+  renderAlerts();
+  renderManagement(m, t);
+  renderOperations(m, t);
+  renderHR(m, t);
+  drawRevenueChart(m.revenue);
+}
+
+function renderAlerts() {
+  const alerts = DATA.alerts || [];
+  const el     = document.getElementById('alerts-container');
+  if (!alerts.length) { el.innerHTML = ''; return; }
+  el.innerHTML = alerts.map(a => `
+    <div class="alert-item">
+      <span class="alert-type ${a.type==='WARNING'?'warn':''}">${a.type}</span>
+      <strong>${a.metric}:</strong> ${a.message}
+    </div>`).join('');
+}
+
+function renderManagement(m, t) {
+  const rev = m.revenue || {};
+  const rm  = m.rm_stock || {};
+  const elec= m.electricity || {};
+  const oil = m.oil || {};
+  const prod= m.production || {};
+
+  const todayRev  = rev.today_revenue  || 0;
+  const mtdRev    = rev.mtd_revenue    || 0;
+  const todayTons = rev.today_tons     || 0;
+  const mtdTons   = rev.mtd_tons       || 0;
+
+  const cards = [
+    metricCard('Revenue Today', fmtL(todayRev),
+      `MTD: ${fmtC(mtdRev)} | Tons: ${todayTons.toFixed(1)}t`,
+      rev.status_today, pct(todayRev, t.daily_revenue_target),
+      `Target: ₹${fmtL(t.daily_revenue_target)}`, '💰'),
+
+    metricCard('MTD Revenue', fmtC(mtdRev),
+      `${mtdTons.toFixed(1)} tons dispatched`,
+      rev.status_mtd, pct(mtdRev, t.monthly_revenue_target),
+      `Target: ${fmtC(t.monthly_revenue_target)}`, '📈'),
+
+    metricCard('RM Stock', `${rm.total_tons || 0} T`,
+      `${(rm.grades||[]).length} grades tracked`,
+      rm.status, pct(rm.total_tons, t.rm_stock_min_tons*3),
+      `Min target: ${t.rm_stock_min_tons} tons`, '🧱'),
+
+    metricCard('Overdue Outstanding', fmtC(rev.overdue_cr || 0),
+      'Pending customer payments',
+      rev.overdue_cr > 5 ? 'RED' : 'GREEN',
+      0, 'Target: < ₹5 Cr', '⚠️'),
+
+    metricCard('Electricity', `${fmt(elec.mtd_units || 0)} Units`,
+      `Daily target: ${fmt(t.electricity_daily_units)} units`,
+      elec.status, pct(elec.today_units, t.electricity_daily_units),
+      `MTD: ${fmt(elec.mtd_units)} units`, '⚡'),
+
+    metricCard('Oil Stock', `${fmt(oil.stock_ltrs || 0)} Ltrs`,
+      oil.note || '',
+      oil.status, pct(oil.stock_ltrs, t.oil_min_stock_ltrs*3),
+      `Min: ${t.oil_min_stock_ltrs} Ltrs`, '🛢️'),
+  ];
+
+  document.getElementById('mgmt-metrics').innerHTML = cards.join('');
+
+  // VF Rejection table
+  const vfData = prod.vf_rejection || [];
+  if (vfData.length) {
+    const rows = vfData.map(vf => {
+      const sc  = statusClass(vf.status);
+      const bar = Math.min(vf.rejection_pct * 10, 100);
+      return `<tr>
+        <td><strong>${vf.vf_no}</strong></td>
+        <td>${fmt(vf.qty)}</td>
+        <td>${fmt(vf.rejection)}</td>
+        <td>
+          <div class="pct-bar" style="width:${bar}px;background:var(--${sc==='green'?'green':'red'})"></div>
+          <span style="color:var(--${sc==='green'?'green3':'red3'})">${vf.rejection_pct}%</span>
+        </td>
+        <td><span class="status-pill ${sc}">${vf.status}</span></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('vf-rejection-table').innerHTML = `
+      <table>
+        <thead><tr><th>VF Machine</th><th>Total Qty</th><th>Rejection</th><th>Rejection %</th><th>Status</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  } else {
+    document.getElementById('vf-rejection-table').innerHTML =
+      '<div style="padding:20px;color:var(--text3);text-align:center">Rejection data loading...</div>';
+  }
+}
+
+function renderOperations(m, t) {
+  const rm   = m.rm_stock  || {};
+  const prod = m.production || {};
+
+  // RM Grades
+  const grades = (rm.grades || []).slice(0, 24);
+  document.getElementById('rm-grades').innerHTML = grades.length
+    ? grades.map(g => `
+        <div class="grade-card">
+          <div class="grade-name">${g.grade}</div>
+          <div class="grade-val" style="color:${g.closing>0?'var(--green3)':'var(--red3)'}">
+            ${g.closing.toFixed(2)} T
+          </div>
+          <div class="grade-sub">In: ${g.inward}T | Used: ${g.consumption}T</div>
+        </div>`).join('')
+    : '<div style="color:var(--text3);padding:20px">RM stock data loading...</div>';
+
+  // Production metrics
+  const cards = [
+    metricCard('MTD Production', `${fmt(prod.mtd_qty)} Pcs`,
+      'Total forging output month to date',
+      'GREY', 0, '', '🏭'),
+  ];
+  document.getElementById('ops-metrics').innerHTML = cards.join('');
+}
+
+function renderHR(m, t) {
+  const mp = m.manpower || {};
+  const cards = [
+    metricCard('Manpower Present', `${mp.present || '—'}`,
+      `Required: ${t.manpower_required}`,
+      mp.status || 'GREY',
+      pct(mp.present, t.manpower_required),
+      `Target: ${t.manpower_required} headcount`, '👥'),
+  ];
+  document.getElementById('hr-metrics').innerHTML = cards.join('');
+  document.getElementById('dept-table').innerHTML =
+    '<table><thead><tr><th>Department</th><th>Present</th><th>Required</th><th>Status</th></tr></thead>' +
+    '<tbody><tr><td colspan="4" style="padding:20px;color:var(--text3);text-align:center">Department data loading...</td></tr></tbody></table>';
+}
+
+function drawRevenueChart(rev) {
+  const canvas  = document.getElementById('revenue-chart');
+  const ctx     = canvas.getContext('2d');
+  const records = (rev && rev.last_30_days) || [];
+  if (!records.length) return;
+
+  canvas.width  = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = 80 * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+  const W   = canvas.offsetWidth;
+  const H   = 80;
+  const vals = records.map(r => (r.fg_value || 0) + (r.jw_value || 0));
+  const max  = Math.max(...vals, 1);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = '#448aff';
+  ctx.lineWidth   = 2;
+  ctx.beginPath();
+
+  vals.forEach((v, i) => {
+    const x = (i / (vals.length-1)) * W;
+    const y = H - (v / max) * (H - 10) - 5;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Fill under line
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+  ctx.fillStyle = 'rgba(68,138,255,0.1)';
+  ctx.fill();
+}
+
+// ── Navigation ───────────────────────────────────────────
+function setTime(t) {
+  currentTime = t;
+  document.querySelectorAll('.time-tab').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+  // In a full implementation, re-filter data based on time range
+}
+
+function setView(v) {
+  currentView = v;
+  document.querySelectorAll('.view-tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('view-' + v).classList.add('active');
+}
+
+// ── Init ─────────────────────────────────────────────────
+loadData();
+// Auto-refresh every 5 minutes
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
