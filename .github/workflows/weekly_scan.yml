@@ -3,7 +3,7 @@ name: Weekly Drive Audit
 on:
   schedule:
     - cron: '0 3 * * 0'      # Full scan every Sunday 08:30 IST
-  workflow_dispatch:           # Manual trigger anytime
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -42,6 +42,10 @@ jobs:
           print("token.pickle restored successfully.")
           EOF
 
+      # ── STEP 0: Backup all sheets before anything runs ──
+      - name: Backup all sheets
+        run: python backup.py
+
       - name: Restore previous audit data
         uses: actions/cache@v4
         with:
@@ -55,39 +59,55 @@ jobs:
           restore-keys: |
             audit-resume-cache
 
+      # ── STAGE 1: Drive Scanner ──────────────────────────
       - name: Run Drive Scanner
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         run: python drive_audit.py
 
+      # ── STAGE 2: Report Writer ──────────────────────────
       - name: Run Report Writer
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           INVENTORY_SHEET_ID: ${{ secrets.INVENTORY_SHEET_ID }}
         run: python write_report.py
 
+      # ── STAGE 3: AI Analyser ────────────────────────────
       - name: Run AI Analyser
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           INVENTORY_SHEET_ID: ${{ secrets.INVENTORY_SHEET_ID }}
         run: python ai_analyser.py
 
+      # ── STAGE 4: Master Builder ─────────────────────────
       - name: Run Master Builder
         env:
           MASTER_SHEET_ID: ${{ secrets.MASTER_SHEET_ID }}
         run: python master_builder.py
 
+      # ── STAGE 5: Material Tracker ───────────────────────
+      - name: Run Material Tracker
+        env:
+          MASTER_SHEET_ID: ${{ secrets.MASTER_SHEET_ID }}
+        run: python material_tracker.py
+
+      # ── STAGE 6: Die Life Tracker ───────────────────────
+      - name: Run Die Tracker
+        env:
+          MASTER_SHEET_ID: ${{ secrets.MASTER_SHEET_ID }}
+        run: python die_tracker.py
+
+      # ── STAGE 7: Profitability Engine ───────────────────
+      - name: Run Profitability Engine
+        env:
+          MASTER_SHEET_ID: ${{ secrets.MASTER_SHEET_ID }}
+        run: python profitability_engine.py
+
+      # ── STAGE 8: CEO Dashboard ──────────────────────────
       - name: Run CEO Dashboard Writer
         run: python ceo_dashboard_writer.py
 
-      - name: Commit CEO data to GitHub Pages
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/ceo_data.json docs/ceo.html || true
-          git diff --staged --quiet || git commit -m "chore: update CEO dashboard data [skip ci]"
-          git push || true
-
+      # ── Upload all artifacts ────────────────────────────
       - name: Upload audit artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -103,6 +123,14 @@ jobs:
             AI_ERP_Intelligence_Report.csv
           retention-days: 30
 
+      - name: Upload backups
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-data-${{ github.run_number }}
+          path: backups/
+          retention-days: 30
+
       - name: Notify on failure
         if: failure()
         env:
@@ -112,10 +140,9 @@ jobs:
             -H 'Content-type: application/json' \
             --data '{"text": ":x: VFPL Audit FAILED — check GitHub Actions"}'
 
-# ─── CEO Dashboard — runs every 2 hours during working day ───
+  # ── CEO Dashboard refresh — runs separately ────────────
   ceo-refresh:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -128,7 +155,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install google-auth google-auth-oauthlib google-auth-httplib2 \
-                      google-api-python-client
+                      google-api-python-client gspread
 
       - name: Restore credentials
         run: echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
@@ -145,11 +172,3 @@ jobs:
 
       - name: Update CEO Dashboard
         run: python ceo_dashboard_writer.py
-
-      - name: Commit updated data
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/ceo_data.json || true
-          git diff --staged --quiet || git commit -m "chore: CEO dashboard refresh [skip ci]"
-          git push || true
