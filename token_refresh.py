@@ -3,7 +3,7 @@ UTILITY — token_refresh.py
 Generates a fresh token.pickle via browser OAuth and prints the base64
 string ready to paste as the GOOGLE_TOKEN GitHub secret.
 
-Run locally (NOT in CI) whenever the token expires:
+Run locally (NOT in CI) whenever the token expires or scopes change:
   python token_refresh.py
 
 Requirements:
@@ -20,35 +20,37 @@ from google.auth.transport.requests import Request
 CREDENTIALS_FILE = 'credentials.json'
 TOKEN_FILE       = 'token.pickle'
 
+# Full read + write scopes needed for:
+#   - drive          → backup.py uploads .xlsx to Drive
+#   - drive          → ceo_dashboard_writer.py uploads to CEO folder
+#   - spreadsheets   → all scripts read and write Google Sheets
 SCOPES = [
-    'https://www.googleapis.com/auth/drive.readonly',
-    'https://www.googleapis.com/auth/spreadsheets.readonly',
+    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/spreadsheets',
 ]
 
 
 def refresh_token():
     creds = None
 
+    # Delete old token to force fresh login with new scopes
     if os.path.exists(TOKEN_FILE):
-        with open(TOKEN_FILE, 'rb') as f:
-            creds = pickle.load(f)
+        print("🗑  Deleting old token to apply new scopes...")
+        os.remove(TOKEN_FILE)
 
-    if creds and creds.valid:
-        print("✅ Existing token is still valid — no browser login needed.")
-    elif creds and creds.expired and creds.refresh_token:
-        print("🔄 Refreshing expired token...")
-        creds.refresh(Request())
-        print("✅ Token refreshed successfully.")
-    else:
-        print("🌐 Opening browser for Google OAuth login...")
-        if not os.path.exists(CREDENTIALS_FILE):
-            raise FileNotFoundError(
-                f"{CREDENTIALS_FILE} not found. Download it from "
-                "Google Cloud Console → APIs & Services → Credentials."
-            )
-        flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-        creds = flow.run_local_server(port=0)
-        print("✅ New token generated.")
+    print("🌐 Opening browser for Google OAuth login...")
+    print("   Sign in with the Google account that has access to all your sheets.")
+    print()
+
+    if not os.path.exists(CREDENTIALS_FILE):
+        raise FileNotFoundError(
+            f"{CREDENTIALS_FILE} not found.\n"
+            "Download from Google Cloud Console → APIs & Services → Credentials → OAuth 2.0"
+        )
+
+    flow  = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
+    creds = flow.run_local_server(port=0)
+    print("✅ New token generated with full read+write scopes.")
 
     with open(TOKEN_FILE, 'wb') as f:
         pickle.dump(creds, f)
@@ -59,11 +61,14 @@ def refresh_token():
 
     print("\n" + "═" * 60)
     print("Copy the value below and save it as the GitHub secret")
-    print("  Settings → Secrets → Actions → GOOGLE_TOKEN")
+    print("  Settings → Secrets → Actions → GOOGLE_TOKEN → Update")
     print("═" * 60)
     print(b64)
-    print("═" * 60 + "\n")
-    print("Token expiry:", creds.expiry)
+    print("═" * 60)
+    print(f"\nToken expiry: {creds.expiry}")
+    print("\nScopes granted:")
+    for s in creds.scopes or SCOPES:
+        print(f"  ✅ {s}")
 
 
 if __name__ == '__main__':
