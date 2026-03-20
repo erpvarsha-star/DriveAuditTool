@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>DME Build Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c10;--s1:#111318;--s2:#181c24;--border:#1e2330;--text:#e8eaf0;--muted:#4a5268;--accent:#e8673d;--green:#34d399;--amber:#fbbf24;--blue:#60a5fa;--red:#f87171;--mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;min-height:100vh;padding-bottom:20px;}
+.hdr{background:var(--s1);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.hdr-title{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.1em;}
+.hdr-sub{font-size:10px;color:var(--muted);}
+.role-sel{display:flex;gap:8px;padding:12px 20px;}
+.role-btn{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s;}
+.role-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
+
+.phase{margin:0 16px 16px;}
+.phase-hdr{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.phase-name{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
+.phase-dot{width:8px;height:8px;border-radius:50%;}
+.phase-pct{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto;}
+.prog-bar{height:3px;background:var(--border);border-radius:2px;margin-bottom:12px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;transition:width .5s ease;}
+
+.build-item{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:11px 14px;margin-bottom:6px;display:flex;align-items:flex-start;gap:10px;}
+.item-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;}
+.item-check.done{background:var(--green);border-color:var(--green);}
+.item-check.blocked{background:rgba(248,113,113,.2);border-color:var(--red);}
+.item-body{flex:1;}
+.item-title{font-size:12px;font-weight:500;line-height:1.4;}
+.item-title.done{text-decoration:line-through;color:var(--muted);}
+.item-meta{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;}
+.tag{font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:3px;}
+.tag-deploy{background:rgba(96,165,250,.15);color:var(--blue);}
+.tag-build{background:rgba(232,103,61,.15);color:var(--accent);}
+.tag-test{background:rgba(251,191,36,.15);color:var(--amber);}
+.tag-done{background:rgba(52,211,153,.15);color:var(--green);}
+.tag-blocked{background:rgba(248,113,113,.15);color:var(--red);}
+
+.error-box{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:12px 14px;margin:0 16px 12px;}
+.error-title{font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:8px;letter-spacing:.08em;}
+.error-item{font-size:11px;color:#fca5a5;padding:3px 0;}
+
+.empty{text-align:center;padding:30px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div>
+    <div class="hdr-title">BUILD TRACKER</div>
+    <div class="hdr-sub">VFPL AI OS — DME Dashboard</div>
+  </div>
+  <div style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="datePill">—</div>
+</header>
+
+<div class="role-sel">
+  <button class="role-btn active" onclick="setRole('all',this)">All</button>
+  <button class="role-btn" onclick="setRole('dme1',this)">DME 1</button>
+  <button class="role-btn" onclick="setRole('dme2',this)">DME 2</button>
+</div>
+
+<div id="errorsBox" style="display:none">
+  <div class="error-box">
+    <div class="error-title">🔴 Errors To Fix</div>
+    <div id="errorsList"></div>
+  </div>
+</div>
+
+<div id="buildContent"></div>
+
+<script>
+const BUILDS = [
+  {
+    phase: 'Phase 1 — Google Sheets Setup',
+    color: '#60a5fa',
+    items: [
+      {id:'b1', title:'Create Procurement Master Sheet with all tabs', role:'dme1', status:'done'},
+      {id:'b2', title:'Build Item_Master tab — 4,719 items from CSV', role:'dme1', status:'done'},
+      {id:'b3', title:'Build Vendor_Master tab — 12 active vendors', role:'dme1', status:'done'},
+      {id:'b4', title:'Build PR_Log tab with dropdowns + VLOOKUP', role:'dme1', status:'pending'},
+      {id:'b5', title:'Build RFQ_Tracker tab with L1/L2/L3 ranking', role:'dme1', status:'pending'},
+      {id:'b6', title:'Build PO_Log tab with auto PO number', role:'dme1', status:'pending'},
+      {id:'b7', title:'Build GRN_Log tab', role:'dme1', status:'pending'},
+      {id:'b8', title:'Build Budget_Master tab', role:'dme1', status:'pending'},
+    ]
+  },
+  {
+    phase: 'Phase 2 — Apps Script Automation',
+    color: '#e8673d',
+    items: [
+      {id:'b9',  title:'Paste procurement_sheet_setup.js into Apps Script', role:'dme2', status:'pending'},
+      {id:'b10', title:'Run setupAllTabs() function — verify all tabs created', role:'dme2', status:'pending'},
+      {id:'b11', title:'Deploy as Web App — get deployment URL', role:'dme2', status:'pending'},
+      {id:'b12', title:'Paste Web App URL into vfpl_procurement.html line WEBAPP_URL', role:'dme2', status:'pending'},
+      {id:'b13', title:'Test PR submission end to end', role:'dme2', status:'pending'},
+      {id:'b14', title:'Set up auto-approval trigger for PRs below Rs25K', role:'dme2', status:'pending'},
+    ]
+  },
+  {
+    phase: 'Phase 3 — Website Deployment',
+    color: '#34d399',
+    items: [
+      {id:'b15', title:'Upload yjm_yash.html to public_html/yash/ in cPanel', role:'dme1', status:'pending'},
+      {id:'b16', title:'Upload yjm_kajal.html to public_html/kajal/ in cPanel', role:'dme1', status:'pending'},
+      {id:'b17', title:'Upload vfpl_procurement.html to public_html/procurement/ in cPanel', role:'dme1', status:'pending'},
+      {id:'b18', title:'Upload vfpl_dashboard.html to public_html/dashboard/ in cPanel', role:'dme1', status:'pending'},
+      {id:'b19', title:'Test all URLs on phone', role:'dme2', status:'pending'},
+      {id:'b20', title:'Add each URL to phone home screen', role:'dme2', status:'pending'},
+    ]
+  },
+  {
+    phase: 'Phase 4 — SQL + Data',
+    color: '#fbbf24',
+    items: [
+      {id:'b21', title:'Run sql_scanner_final.py — upload schema_report.json to Claude', role:'dme2', status:'pending'},
+      {id:'b22', title:'Get table names confirmed from Claude', role:'dme2', status:'pending'},
+      {id:'b23', title:'Run sql_extractor_final.py — verify 6 Excel files generated', role:'dme2', status:'pending'},
+      {id:'b24', title:'Upload Excel files to Claude for analysis', role:'dme2', status:'pending'},
+    ]
+  },
+];
+
+const ERRORS = [
+  'Electricity formula broken on dashboard — #DIV/0! (units not linked)',
+  'JWK Inventory showing -652.1T — reconcile before March 31',
+  '57F4 gap: 182.1T unaccounted — check inward entries',
+];
+
+let role = 'all';
+let done = JSON.parse(localStorage.getItem('dme_done') || '[]');
+
+function setRole(r, btn) {
+  role = r;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function render() {
+  // Date
+  document.getElementById('datePill').textContent =
+    new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+
+  // Errors
+  if (ERRORS.length) {
+    document.getElementById('errorsBox').style.display = 'block';
+    document.getElementById('errorsList').innerHTML =
+      ERRORS.map(e => `<div class="error-item">• ${e}</div>`).join('');
+  }
+
+  // Builds
+  const content = document.getElementById('buildContent');
+  content.innerHTML = BUILDS.map(phase => {
+    const items = phase.items.filter(i => role === 'all' || i.role === role);
+    if (!items.length) return '';
+
+    const doneCount = items.filter(i => done.includes(i.id) || i.status === 'done').length;
+    const pct = Math.round(doneCount / items.length * 100);
+
+    return `
+      <div class="phase">
+        <div class="phase-hdr">
+          <div class="phase-dot" style="background:${phase.color}"></div>
+          <div class="phase-name">${phase.phase}</div>
+          <div class="phase-pct">${doneCount}/${items.length}</div>
+        </div>
+        <div class="prog-bar">
+          <div class="prog-fill" style="width:${pct}%;background:${phase.color}"></div>
+        </div>
+        ${items.map(item => {
+          const isDone = done.includes(item.id) || item.status === 'done';
+          const isBlocked = item.status === 'blocked';
+          const statusTag = isDone ? 'tag-done' : isBlocked ? 'tag-blocked' : 'tag-build';
+          const statusLabel = isDone ? 'done' : isBlocked ? 'blocked' : item.role === 'dme1' ? 'dme1' : 'dme2';
+          return `
+            <div class="build-item">
+              <div class="item-check ${isDone?'done':isBlocked?'blocked':''}" onclick="toggleItem('${item.id}')">
+                ${isDone?'<svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#000" stroke-width="1.8" stroke-linecap="round"/></svg>':''}
+                ${isBlocked?'<span style="font-size:9px;color:var(--red)">✕</span>':''}
+              </div>
+              <div class="item-body">
+                <div class="item-title ${isDone?'done':''}">${item.title}</div>
+                <div class="item-meta">
+                  <span class="tag ${statusTag}">${statusLabel}</span>
+                </div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>`;
+  }).join('');
+}
+
+function toggleItem(id) {
+  const idx = done.indexOf(id);
+  if (idx > -1) done.splice(idx, 1);
+  else done.push(id);
+  localStorage.setItem('dme_done', JSON.stringify(done));
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
