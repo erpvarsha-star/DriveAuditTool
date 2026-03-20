@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="YJM Power">
+<title>YJM Power — Yash</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0c10; --s1:#111318; --s2:#181c24; --border:#1e2330;
+  --text:#e8eaf0; --muted:#4a5268; --accent:#e8673d; --green:#34d399;
+  --amber:#fbbf24; --blue:#60a5fa; --red:#f87171; --purple:#c4b5fd;
+  --mono:'JetBrains Mono',monospace; --sans:'Sora',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;padding-bottom:80px;}
+
+/* HEADER */
+.hdr{background:var(--s1);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.hdr-brand{display:flex;align-items:center;gap:10px;}
+.hdr-hex{width:30px;height:30px;background:var(--accent);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:700;color:#000;}
+.hdr-name{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.1em;}
+.hdr-role{font-size:10px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;}
+.time-pill{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--s2);padding:4px 10px;border-radius:12px;border:1px solid var(--border);}
+
+/* QUICK STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px 20px;}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:12px;position:relative;overflow:hidden;}
+.stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--sc,var(--accent));}
+.stat-n{font-family:var(--mono);font-size:22px;font-weight:600;line-height:1;}
+.stat-l{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.06em;}
+
+/* RED FLAGS */
+.flags{margin:0 20px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:8px;padding:12px 14px;display:none;}
+.flags-title{font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:.1em;margin-bottom:8px;}
+.flag-item{font-size:12px;color:#fca5a5;padding:3px 0;border-bottom:1px solid rgba(248,113,113,.1);}
+.flag-item:last-child{border:none;}
+
+/* SECTION */
+.sec{margin:0 20px 16px;}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.sec-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.sec-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);}
+.sec-action{font-size:11px;color:var(--accent);cursor:pointer;font-family:var(--mono);}
+
+/* TASK CARD */
+.task{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:13px 15px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color .15s;}
+.task:hover{border-color:var(--border2,#2a3040);}
+.task.done{opacity:.4;}
+.task-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.task.done .task-check{background:var(--green);border-color:var(--green);}
+.task-body{flex:1;min-width:0;}
+.task-title{font-size:13px;font-weight:500;line-height:1.4;}
+.task.done .task-title{text-decoration:line-through;color:var(--muted);}
+.task-meta{display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap;}
+.task-assign{font-size:10px;font-family:var(--mono);color:var(--muted);}
+.task-due{font-size:10px;font-family:var(--mono);}
+.due-ok{color:var(--green);}
+.due-warn{color:var(--amber);}
+.due-late{color:var(--red);}
+.task-pri{font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:3px;font-weight:600;}
+.pri-urgent{background:rgba(248,113,113,.15);color:var(--red);}
+.pri-high{background:rgba(251,191,36,.15);color:var(--amber);}
+.pri-normal{background:rgba(96,165,250,.15);color:var(--blue);}
+.pri-low{background:rgba(74,82,104,.2);color:var(--muted);}
+
+/* ADD TASK */
+.add-bar{position:fixed;bottom:0;left:0;right:0;background:var(--s1);border-top:1px solid var(--border);padding:12px 20px;display:flex;gap:8px;z-index:100;}
+.add-input{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;}
+.add-input:focus{border-color:var(--accent);}
+.add-input::placeholder{color:var(--muted);}
+.add-btn{background:var(--accent);border:none;border-radius:8px;width:42px;color:#000;font-size:18px;cursor:pointer;font-weight:700;flex-shrink:0;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:16px 16px 0 0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:20px;}
+.modal-drag{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:16px;}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.fg label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+.fg input,.fg select,.fg textarea{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent);}
+.fg select option{background:var(--s1);}
+.fg textarea{resize:vertical;min-height:80px;}
+.steps-area{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:12px;}
+.step-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);}
+.step-row:last-child{border:none;}
+.step-num{font-family:var(--mono);font-size:10px;color:var(--muted);width:16px;flex-shrink:0;}
+.step-text{flex:1;font-size:12px;}
+.btn-row{display:flex;gap:8px;margin-top:4px;}
+.btn{padding:10px 18px;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;}
+.btn-p{background:var(--accent);color:#000;}
+.btn-s{background:transparent;color:var(--text);border-color:var(--border);}
+.btn-full{width:100%;}
+
+/* TOAST */
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--s2);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:8px;font-size:12px;z-index:300;opacity:0;transition:all .25s;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast.ok{border-left:3px solid var(--green);}
+.toast.err{border-left:3px solid var(--red);}
+
+/* EMPTY */
+.empty{text-align:center;padding:32px 20px;color:var(--muted);}
+.empty-icon{font-size:28px;margin-bottom:8px;}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-hex">YJM</div>
+    <div>
+      <div class="hdr-name">YJM POWER</div>
+      <div class="hdr-role">Owner Dashboard</div>
+    </div>
+  </div>
+  <div class="time-pill" id="timePill">—</div>
+</header>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat" style="--sc:var(--red)">
+    <div class="stat-n" id="s-urgent">0</div>
+    <div class="stat-l">Urgent</div>
+  </div>
+  <div class="stat" style="--sc:var(--amber)">
+    <div class="stat-n" id="s-open">0</div>
+    <div class="stat-l">Open</div>
+  </div>
+  <div class="stat" style="--sc:var(--green)">
+    <div class="stat-n" id="s-done">0</div>
+    <div class="stat-l">Done today</div>
+  </div>
+</div>
+
+<!-- RED FLAGS -->
+<div class="flags" id="flagsEl">
+  <div class="flags-title">⚠ Needs Attention</div>
+  <div id="flagsList"></div>
+</div>
+
+<!-- URGENT -->
+<div class="sec">
+  <div class="sec-hdr">
+    <div class="sec-title"><div class="sec-dot" style="background:var(--red)"></div>Urgent</div>
+  </div>
+  <div id="urgentList"><div class="empty"><div class="empty-icon">✅</div>Nothing urgent</div></div>
+</div>
+
+<!-- MY TASKS -->
+<div class="sec">
+  <div class="sec-hdr">
+    <div class="sec-title"><div class="sec-dot"></div>My Tasks</div>
+    <div class="sec-action" onclick="showFilter()">Filter</div>
+  </div>
+  <div id="taskList"><div class="empty"><div class="empty-icon">📋</div>No tasks yet — add one below</div></div>
+</div>
+
+<!-- DELEGATED -->
+<div class="sec">
+  <div class="sec-hdr">
+    <div class="sec-title"><div class="sec-dot" style="background:var(--blue)"></div>Delegated</div>
+  </div>
+  <div id="delegatedList"><div class="empty"><div class="empty-icon">→</div>No delegated tasks</div></div>
+</div>
+
+<!-- ADD BAR -->
+<div class="add-bar">
+  <input class="add-input" id="quickAdd" placeholder="Add task... (type and press +)" onkeydown="if(event.key==='Enter')addQuick()">
+  <button class="add-btn" onclick="addQuick()">+</button>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal-bg" id="addModal">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title">New Task</div>
+    <div class="fg"><label>Task Title *</label><input id="m-title" placeholder="What needs to be done?"></div>
+    <div class="fg"><label>Assign To</label>
+      <select id="m-assign">
+        <option value="yash">Yash (me)</option>
+        <option value="kajal">Kajal — EA</option>
+        <option value="fazal">Fazal — Purchase</option>
+        <option value="deepak">Deepak — Finance</option>
+        <option value="sanjay">Sanjay — Sales</option>
+        <option value="dme1">DME 1</option>
+        <option value="dme2">DME 2</option>
+      </select>
+    </div>
+    <div class="fg"><label>Priority</label>
+      <select id="m-prio">
+        <option value="normal">Normal</option>
+        <option value="high">High</option>
+        <option value="urgent">🔴 Urgent</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    <div class="fg"><label>Due Date</label><input type="date" id="m-due"></div>
+    <div class="fg"><label>Notes</label><textarea id="m-notes" placeholder="Context, links, details..."></textarea></div>
+
+    <!-- STEPS (for Kajal) -->
+    <div id="stepsSection" style="display:none">
+      <div class="fg"><label>Break into steps (for Kajal)</label></div>
+      <div class="steps-area" id="stepsArea">
+        <div class="step-row"><div class="step-num">1.</div><input class="step-text" style="background:transparent;border:none;color:var(--text);font-size:12px;outline:none;width:100%" placeholder="Step 1..." id="step1"></div>
+        <div class="step-row"><div class="step-num">2.</div><input class="step-text" style="background:transparent;border:none;color:var(--text);font-size:12px;outline:none;width:100%" placeholder="Step 2..." id="step2"></div>
+        <div class="step-row"><div class="step-num">3.</div><input class="step-text" style="background:transparent;border:none;color:var(--text);font-size:12px;outline:none;width:100%" placeholder="Step 3..." id="step3"></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-p btn-full" onclick="saveTask()">Save Task</button>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn btn-s btn-full" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────
+// Replace with your Google Apps Script Web App URL after deployment
+const SCRIPT_URL = '';
+const SHEET_ID   = ''; // YJM Power Data sheet ID
+
+// ── State ──────────────────────────────────────────
+let tasks = JSON.parse(localStorage.getItem('yjm_tasks') || '[]');
+let currentEdit = null;
+
+// ── Clock ──────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const ist = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Kolkata'}));
+  document.getElementById('timePill').textContent =
+    ist.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'}) + ' IST';
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Render ─────────────────────────────────────────
+function render() {
+  const today = new Date().toISOString().split('T')[0];
+  const open  = tasks.filter(t => !t.done);
+  const urgent = open.filter(t => t.priority === 'urgent');
+  const mine   = open.filter(t => t.assignTo === 'yash' && t.priority !== 'urgent');
+  const deleg  = open.filter(t => t.assignTo !== 'yash');
+  const doneToday = tasks.filter(t => t.done && t.doneDate === today);
+
+  document.getElementById('s-urgent').textContent = urgent.length;
+  document.getElementById('s-open').textContent   = open.length;
+  document.getElementById('s-done').textContent   = doneToday.length;
+
+  renderList('urgentList', urgent);
+  renderList('taskList', mine);
+  renderList('delegatedList', deleg);
+
+  // Red flags
+  const overdue = open.filter(t => t.due && t.due < today);
+  const flagsEl = document.getElementById('flagsEl');
+  const flagsList = document.getElementById('flagsList');
+  if (overdue.length > 0) {
+    flagsEl.style.display = 'block';
+    flagsList.innerHTML = overdue.map(t =>
+      `<div class="flag-item">Overdue: ${t.title} — assigned to ${t.assignTo}</div>`
+    ).join('');
+  } else {
+    flagsEl.style.display = 'none';
+  }
+}
+
+function renderList(id, list) {
+  const el = document.getElementById(id);
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">✅</div>All clear</div>';
+    return;
+  }
+  el.innerHTML = list.map(t => taskHTML(t)).join('');
+}
+
+function taskHTML(t) {
+  const today = new Date().toISOString().split('T')[0];
+  let dueClass = 'due-ok', dueLabel = '';
+  if (t.due) {
+    dueLabel = fmtDate(t.due);
+    if (t.due < today) dueClass = 'due-late';
+    else if (t.due === today) dueClass = 'due-warn';
+  }
+  const priMap = {urgent:'pri-urgent',high:'pri-high',normal:'pri-normal',low:'pri-low'};
+  const assignLabel = {yash:'Me',kajal:'Kajal',fazal:'Fazal',deepak:'Deepak',sanjay:'Sanjay',dme1:'DME 1',dme2:'DME 2'};
+
+  return `
+    <div class="task ${t.done?'done':''}" onclick="toggleDone('${t.id}')">
+      <div class="task-check">${t.done?'<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L4 7L9 1" stroke="#000" stroke-width="2" stroke-linecap="round"/></svg>':''}</div>
+      <div class="task-body">
+        <div class="task-title">${t.title}</div>
+        <div class="task-meta">
+          <span class="task-pri ${priMap[t.priority]||'pri-normal'}">${t.priority||'normal'}</span>
+          ${t.assignTo !== 'yash' ? `<span class="task-assign">→ ${assignLabel[t.assignTo]||t.assignTo}</span>` : ''}
+          ${dueLabel ? `<span class="task-due ${dueClass}">${dueLabel}</span>` : ''}
+          ${t.steps?.filter(s=>s).length ? `<span class="task-assign">${t.steps.filter(s=>s).length} steps</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function fmtDate(d) {
+  const today = new Date().toISOString().split('T')[0];
+  const tom   = new Date(); tom.setDate(tom.getDate()+1);
+  const tomStr = tom.toISOString().split('T')[0];
+  if (d === today) return 'Today';
+  if (d === tomStr) return 'Tomorrow';
+  return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+
+// ── Actions ────────────────────────────────────────
+function toggleDone(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  t.doneDate = t.done ? new Date().toISOString().split('T')[0] : null;
+  save();
+  render();
+  toast(t.done ? '✓ Done' : 'Reopened', 'ok');
+}
+
+function addQuick() {
+  const input = document.getElementById('quickAdd');
+  const title = input.value.trim();
+  if (!title) { openModal(); return; }
+  const task = {
+    id: 'T' + Date.now(),
+    title,
+    assignTo: 'yash',
+    priority: 'normal',
+    done: false,
+    created: new Date().toISOString(),
+    due: null, notes: '', steps: []
+  };
+  tasks.unshift(task);
+  save();
+  render();
+  input.value = '';
+  toast('Task added', 'ok');
+}
+
+function openModal() {
+  const d = new Date(); d.setDate(d.getDate()+1);
+  document.getElementById('m-due').value = d.toISOString().split('T')[0];
+  document.getElementById('addModal').classList.add('show');
+  document.getElementById('m-title').focus();
+}
+
+function closeModal() {
+  document.getElementById('addModal').classList.remove('show');
+  ['m-title','m-notes','step1','step2','step3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+// Show steps when Kajal selected
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('m-assign')?.addEventListener('change', function() {
+    document.getElementById('stepsSection').style.display =
+      this.value === 'kajal' ? 'block' : 'none';
+  });
+});
+
+function saveTask() {
+  const title = document.getElementById('m-title').value.trim();
+  if (!title) { toast('Add a title', 'err'); return; }
+
+  const steps = ['step1','step2','step3']
+    .map(id => document.getElementById(id)?.value?.trim() || '')
+    .filter(s => s);
+
+  const task = {
+    id:       'T' + Date.now(),
+    title,
+    assignTo: document.getElementById('m-assign').value,
+    priority: document.getElementById('m-prio').value,
+    due:      document.getElementById('m-due').value || null,
+    notes:    document.getElementById('m-notes').value,
+    steps,
+    done:     false,
+    created:  new Date().toISOString(),
+    doneDate: null
+  };
+
+  tasks.unshift(task);
+  save();
+  render();
+  closeModal();
+  toast('Task saved', 'ok');
+}
+
+function save() {
+  localStorage.setItem('yjm_tasks', JSON.stringify(tasks));
+  // Write to Google Sheet if configured
+  if (SCRIPT_URL) {
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({action:'saveTasks', tasks}),
+      headers: {'Content-Type':'application/json'}
+    }).catch(()=>{});
+  }
+}
+
+function showFilter() { toast('Filter coming soon', 'ok'); }
+
+function toast(msg, type='ok') {
+  const t = document.getElementById('toastEl');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Init ───────────────────────────────────────────
+render();
+
+// Quick add on + button in add bar
+document.getElementById('quickAdd')?.addEventListener('click', function() {
+  if (!this.value) openModal();
+});
+</script>
+</body>
+</html>
