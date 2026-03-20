@@ -36,13 +36,13 @@ jobs:
           import base64, os, sys
           token = os.environ.get('GOOGLE_TOKEN', '')
           if not token:
-              sys.exit("ERROR: GOOGLE_TOKEN secret is missing or empty.")
+              sys.exit("ERROR: GOOGLE_TOKEN secret is missing.")
           with open('token.pickle', 'wb') as f:
               f.write(base64.b64decode(token))
-          print("token.pickle restored successfully.")
+          print("token.pickle restored.")
           EOF
 
-      # ── STEP 0: Backup all sheets before anything runs ──
+      # ── STEP 0: Backup ──────────────────────────────────
       - name: Backup all sheets
         run: python backup.py
 
@@ -56,58 +56,47 @@ jobs:
             ai_analysis.json
             master_data.json
           key: audit-resume-cache
-          restore-keys: |
-            audit-resume-cache
+          restore-keys: audit-resume-cache
 
       # ── STAGE 1: Drive Scanner ──────────────────────────
       - name: Run Drive Scanner
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         run: python drive_audit.py
 
       # ── STAGE 2: Report Writer ──────────────────────────
       - name: Run Report Writer
         env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           INVENTORY_SHEET_ID: ${{ secrets.INVENTORY_SHEET_ID }}
         run: python write_report.py
 
-      # ── STAGE 3: AI Analyser ────────────────────────────
-      - name: Run AI Analyser
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          INVENTORY_SHEET_ID: ${{ secrets.INVENTORY_SHEET_ID }}
-        run: python ai_analyser.py
-
-      # ── STAGE 4: Master Builder ─────────────────────────
+      # ── STAGE 3: Master Builder ─────────────────────────
       - name: Run Master Builder
         env:
           MASTER_SHEET_ID: ${{ secrets.MASTER_SHEET_ID }}
         run: python master_builder.py
 
-      # ── STAGE 5: Material Tracker ───────────────────────
+      # ── STAGE 4: Material Tracker ───────────────────────
       - name: Run Material Tracker
         env:
           MASTER_SHEET_ID: ${{ secrets.MASTER_SHEET_ID }}
         run: python material_tracker.py
 
-      # ── STAGE 6: Die Life Tracker ───────────────────────
+      # ── STAGE 5: Die Tracker ────────────────────────────
       - name: Run Die Tracker
         env:
           MASTER_SHEET_ID: ${{ secrets.MASTER_SHEET_ID }}
         run: python die_tracker.py
 
-      # ── STAGE 7: Profitability Engine ───────────────────
+      # ── STAGE 6: Profitability Engine ───────────────────
       - name: Run Profitability Engine
         env:
           MASTER_SHEET_ID: ${{ secrets.MASTER_SHEET_ID }}
         run: python profitability_engine.py
 
-      # ── STAGE 8: CEO Dashboard ──────────────────────────
+      # ── STAGE 7: CEO Dashboard ──────────────────────────
       - name: Run CEO Dashboard Writer
         run: python ceo_dashboard_writer.py
 
-      # ── Upload all artifacts ────────────────────────────
+      # ── Save cache ──────────────────────────────────────
       - name: Upload audit artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -119,8 +108,6 @@ jobs:
             scanned_folders.json
             ai_analysis.json
             master_data.json
-            ERP_Migration_Final_Report.csv
-            AI_ERP_Intelligence_Report.csv
           retention-days: 30
 
       - name: Upload backups
@@ -140,7 +127,6 @@ jobs:
             -H 'Content-type: application/json' \
             --data '{"text": ":x: VFPL Audit FAILED — check GitHub Actions"}'
 
-  # ── CEO Dashboard refresh — runs separately ────────────
   ceo-refresh:
     runs-on: ubuntu-latest
     steps:
