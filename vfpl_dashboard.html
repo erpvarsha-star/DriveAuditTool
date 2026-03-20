@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VFPL Operations Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0c0f;
+    --surface:   #111318;
+    --border:    #1e2229;
+    --border2:   #2a3040;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --green:     #22c55e;
+    --red:       #ef4444;
+    --amber:     #f59e0b;
+    --blue:      #3b82f6;
+    --cyan:      #06b6d4;
+    --accent:    #f97316;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'IBM Plex Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 11px;
+    color: #000;
+  }
+
+  .logo-text {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text);
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.2);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--green);
+    letter-spacing: 0.05em;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .last-updated {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .refresh-btn {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+  .refresh-btn:hover { background: var(--border); }
+
+  /* ── LAYOUT ── */
+  .main {
+    padding: 20px 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  /* ── RED FLAG BANNER ── */
+  .red-flags {
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+  }
+
+  .red-flags-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--red);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .flags-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .flag-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.15);
+    border-radius: 4px;
+    font-size: 11px;
+    color: #fca5a5;
+  }
+
+  /* ── KPI ROW ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--kpi-color, var(--blue));
+  }
+
+  .kpi-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .kpi-value {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .kpi-sub {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .kpi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 10px;
+    margin-top: 4px;
+  }
+
+  .badge-red   { background: rgba(239,68,68,0.15); color: #fca5a5; }
+  .badge-green { background: rgba(34,197,94,0.15); color: #86efac; }
+  .badge-amber { background: rgba(245,158,11,0.15); color: #fcd34d; }
+
+  /* ── GRID LAYOUT ── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .grid-1-2 {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--dot-color, var(--blue));
+  }
+
+  .card-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .card-body {
+    padding: 14px 16px;
+  }
+
+  /* ── TABLE ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table th {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-table td {
+    padding: 7px 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    border-bottom: 1px solid rgba(30,34,41,0.5);
+    vertical-align: middle;
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── STATUS CHIPS ── */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: var(--mono);
+    white-space: nowrap;
+  }
+
+  .chip-red    { background: rgba(239,68,68,0.15);  color: #fca5a5; }
+  .chip-green  { background: rgba(34,197,94,0.15);  color: #86efac; }
+  .chip-amber  { background: rgba(245,158,11,0.15); color: #fcd34d; }
+  .chip-blue   { background: rgba(59,130,246,0.15); color: #93c5fd; }
+  .chip-gray   { background: rgba(100,116,139,0.15);color: #94a3b8; }
+
+  /* ── BAR CHART ── */
+  .bar-chart { display: flex; flex-direction: column; gap: 8px; }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 60px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .bar-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bar-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--bar-color, var(--blue));
+    transition: width 0.8s ease;
+  }
+
+  .bar-value {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text);
+    text-align: right;
+  }
+
+  /* ── MISSED ENTRIES ── */
+  .missed-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+
+  .missed-item {
+    padding: 8px 10px;
+    border-radius: 4px;
+    border: 1px solid;
+    text-align: center;
+  }
+
+  .missed-ok    { background: rgba(34,197,94,0.08);  border-color: rgba(34,197,94,0.2); }
+  .missed-warn  { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); }
+  .missed-alert { background: rgba(239,68,68,0.08);  border-color: rgba(239,68,68,0.2); }
+
+  .missed-machine {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .missed-count {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .missed-ok    .missed-count { color: var(--green); }
+  .missed-warn  .missed-count { color: var(--amber); }
+  .missed-alert .missed-count { color: var(--red); }
+
+  .missed-label {
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── GAUGE ── */
+  .gauge-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .gauge-row:last-child { border-bottom: none; }
+
+  .gauge-label {
+    font-size: 11px;
+    color: var(--text);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gauge-bar {
+    width: 120px;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .gauge-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s ease;
+  }
+
+  .gauge-pct {
+    font-family: var(--mono);
+    font-size: 11px;
+    width: 40px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── LOADING / ERROR ── */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 32px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    padding: 16px;
+    color: #fca5a5;
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(239,68,68,0.06);
+    border-radius: 4px;
+    margin: 8px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1200px) {
+    .kpi-row { grid-template-columns: repeat(3, 1fr); }
+    .grid-3  { grid-template-columns: 1fr 1fr; }
+    .grid-1-2 { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .grid-2  { grid-template-columns: 1fr; }
+    .grid-3  { grid-template-columns: 1fr; }
+    .main { padding: 12px; }
+  }
+
+  /* ── NUMBER COLOR HELPERS ── */
+  .num-red   { color: #fca5a5; }
+  .num-green { color: #86efac; }
+  .num-amber { color: #fcd34d; }
+  .num-blue  { color: #93c5fd; }
+  .num-cyan  { color: #67e8f9; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">VF</div>
+    <div>
+      <div class="logo-text">VARSHA FORGINGS</div>
+      <div class="logo-sub">Operations Intelligence Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      LIVE
+    </div>
+    <div class="last-updated" id="lastUpdated">—</div>
+    <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- RED FLAG BANNER -->
+  <div class="red-flags" id="redFlagBanner" style="display:none">
+    <div class="red-flags-header">⚠ Red Flags</div>
+    <div class="flags-grid" id="flagsGrid"></div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="kpi-row">
+    <div class="kpi" style="--kpi-color: var(--green)">
+      <div class="kpi-label">RM Stock</div>
+      <div class="kpi-value" id="kpi-rm">—</div>
+      <div class="kpi-sub">Tonnes on hand</div>
+    </div>
+    <div class="kpi" style="--kpi-color: var(--blue)">
+      <div class="kpi-label">Production MTD</div>
+      <div class="kpi-value" id="kpi-prod">—</div>
+      <div class="kpi-sub">Tonnes this month</div>
+    </div>
+    <div class="kpi" style="--kpi-color: var(--accent)">
+      <div class="kpi-label">Sales Dispatch</div>
+      <div class="kpi-value" id="kpi-sales">—</div>
+      <div class="kpi-sub">Value MTD</div>
+    </div>
+    <div class="kpi" style="--kpi-color: var(--cyan)">
+      <div class="kpi-label">Oil Consumption</div>
+      <div class="kpi-value" id="kpi-oil">—</div>
+      <div class="kpi-sub">Litres YTD</div>
+    </div>
+    <div class="kpi" style="--kpi-color: var(--amber)">
+      <div class="kpi-label">57F4 Gap</div>
+      <div class="kpi-value num-amber" id="kpi-57f4">—</div>
+      <div class="kpi-sub">T with vendor</div>
+    </div>
+    <div class="kpi" style="--kpi-color: var(--red)">
+      <div class="kpi-label">JWK Inventory</div>
+      <div class="kpi-value" id="kpi-jwk">—</div>
+      <div class="kpi-sub">Tonnes (check if negative)</div>
+    </div>
+  </div>
+
+  <!-- ROW 2: 57F4 + Electricity + Machine Output -->
+  <div class="grid-3">
+
+    <!-- 57F4 RECONCILIATION -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-dot" style="--dot-color: var(--amber)"></div>
+          57F4 Reconciliation
+        </div>
+        <div class="card-meta" id="f4meta">Job Work</div>
+      </div>
+      <div class="card-body" id="f4body">
+        <div class="loading"><div class="spinner"></div>Loading...</div>
+      </div>
+    </div>
+
+    <!-- ELECTRICITY -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-dot" style="--dot-color: var(--cyan)"></div>
+          Electricity Consumption
+        </div>
+        <div class="card-meta" id="elecmeta">Units/day</div>
+      </div>
+      <div class="card-body" id="elecbody">
+        <div class="loading"><div class="spinner"></div>Loading...</div>
+      </div>
+    </div>
+
+    <!-- OIL & FO -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-dot" style="--dot-color: var(--accent)"></div>
+          Furnace Oil / FO per Ton
+        </div>
+        <div class="card-meta">Forge + HT</div>
+      </div>
+      <div class="card-body" id="oilbody">
+        <div class="loading"><div class="spinner"></div>Loading...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 3: Machine Shop + Missed Entries -->
+  <div class="grid-2">
+
+    <!-- MACHINE SHOP OUTPUT -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-dot" style="--dot-color: var(--blue)"></div>
+          Machine Shop — CNC Output
+        </div>
+        <div class="card-meta" id="cncmeta">Today</div>
+      </div>
+      <div class="card-body" id="cncbody">
+        <div class="loading"><div class="spinner"></div>Loading...</div>
+      </div>
+    </div>
+
+    <!-- MISSED ENTRIES -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-dot" style="--dot-color: var(--red)"></div>
+          Missed Shift Entries
+        </div>
+        <div class="card-meta">Today — all sections</div>
+      </div>
+      <div class="card-body" id="missedbody">
+        <div class="loading"><div class="spinner"></div>Loading...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 4: RM Inward + Production + Dispatch Trend -->
+  <div class="grid-3">
+
+    <!-- RM INWARD -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-dot" style="--dot-color: var(--green)"></div>
+          RM Inward — March
+        </div>
+        <div class="card-meta" id="rmmeta">Daily</div>
+      </div>
+      <div class="card-body" id="rmbody">
+        <div class="loading"><div class="spinner"></div>Loading...</div>
+      </div>
+    </div>
+
+    <!-- PRODUCTION DAILY -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-dot" style="--dot-color: var(--blue)"></div>
+          Production — March
+        </div>
+        <div class="card-meta">Daily Tonnes</div>
+      </div>
+      <div class="card-body" id="prodbody">
+        <div class="loading"><div class="spinner"></div>Loading...</div>
+      </div>
+    </div>
+
+    <!-- DISPATCH DAILY -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-dot" style="--dot-color: var(--accent)"></div>
+          Dispatch — March
+        </div>
+        <div class="card-meta">Daily Tonnes</div>
+      </div>
+      <div class="card-body" id="dispbody">
+        <div class="loading"><div class="spinner"></div>Loading...</div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  SHEET IDs
+// ═══════════════════════════════════════════════════════
+const SHEETS = {
+  dashboard:   '1NR8EPGRJN0AQDXZjYw5k93clsO8AD4u2l2Xke1lBC2I',
+  machineShop: '1txZM9a9_OSG-ZWYaAEBLKj-9M7LYLrFyl0kJkPsTMGI',
+  electricity: '1nUvf-UWjBSbSWnZTNph-gRUbjzuguGlidpYBKshKUNQ',
+  f4inward:    '1uX7LqWXwhzA1sLu3TUS-WJ_JLeW1JdOmLeDgNhf2Zfg',
+  f4outward:   '1yRsAs7zV0HvH63Ah64D0fcttNAhmrRI6AX1MHKvRyxg',
+};
+
+const API = (id, range) =>
+  `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}?key=AIzaSyD-placeholder`;
+
+// ── Use CSV export (public sheets, no API key needed) ──
+const CSV = (id, gid = 0) =>
+  `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+
+async function fetchCSV(id, gid = 0) {
+  const url = CSV(id, gid);
+  const r   = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const text = await r.text();
+  return parseCSV(text);
+}
+
+function parseCSV(text) {
+  const lines = text.split('\n');
+  return lines.map(line => {
+    const result = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    result.push(cur.trim());
+    return result;
+  });
+}
+
+function fmt(val) {
+  if (!val) return '—';
+  return String(val).replace(/[₹,]/g, '').trim();
+}
+
+function fmtNum(n, decimals = 1) {
+  const v = parseFloat(n);
+  if (isNaN(v)) return '—';
+  if (Math.abs(v) >= 10000000) return (v/10000000).toFixed(1) + ' Cr';
+  if (Math.abs(v) >= 100000)   return (v/100000).toFixed(1) + ' L';
+  return v.toFixed(decimals);
+}
+
+function safe(fn, fallback = '—') {
+  try { return fn(); } catch { return fallback; }
+}
+
+// ═══════════════════════════════════════════════════════
+//  DASHBOARD SHEET (main KPIs)
+// ═══════════════════════════════════════════════════════
+async function loadDashboard() {
+  try {
+    const rows = await fetchCSV(SHEETS.dashboard, 1601383038);
+
+    // Row indices (0-based from CSV)
+    // Row 1  = RM Stock (A1=label, B1=value)
+    // Row 9  = Oil value
+    // Row 14 = Sales dispatch value
+    // Row 19 = JWK Inventory
+    // Row 25 = Total Production
+    // Row 111= 57F4 Outward
+    // Row 112= 57F4 Inward
+
+    const rmStock  = safe(() => rows[0]?.[1]);
+    const oilYTD   = safe(() => rows[7]?.[1]);
+    const salesVal = safe(() => rows[13]?.[1]);
+    const jwkInv   = safe(() => rows[18]?.[1]);
+    const prodMTD  = safe(() => rows[30]?.[1]);
+    const f4out    = safe(() => rows[110]?.[1]);
+    const f4in     = safe(() => rows[111]?.[1]);
+
+    // KPIs
+    document.getElementById('kpi-rm').textContent    = fmtNum(rmStock) + ' T';
+    document.getElementById('kpi-prod').textContent  = fmtNum(prodMTD) + ' T';
+    document.getElementById('kpi-sales').textContent = fmtNum(salesVal);
+    document.getElementById('kpi-oil').textContent   = fmtNum(oilYTD, 0) + ' L';
+
+    const f4gap = parseFloat(f4out) - parseFloat(f4in);
+    document.getElementById('kpi-57f4').textContent = isNaN(f4gap) ? '—' : fmtNum(f4gap) + ' T';
+
+    const jwkVal = parseFloat(jwkInv);
+    const jwkEl  = document.getElementById('kpi-jwk');
+    jwkEl.textContent = fmtNum(jwkInv) + ' T';
+    if (jwkVal < 0) {
+      jwkEl.classList.add('num-red');
+      addFlag('JWK Inventory NEGATIVE: ' + fmtNum(jwkInv) + ' T');
+    }
+
+    // Red flags
+    if (!isNaN(f4gap) && f4gap > 100) {
+      addFlag('57F4 Gap: ' + fmtNum(f4gap) + ' T with vendors');
+    }
+
+    // 57F4 card
+    render57F4(f4out, f4in, rows);
+
+    // RM Inward bar chart
+    renderDailyBars('rmbody', rows, 4, 'RM Inward (T)', 'var(--green)', 15);
+
+    // Production bar chart
+    renderDailyBars('prodbody', rows, 25, 'Production (T)', 'var(--blue)', 15);
+
+    // Dispatch bar chart
+    renderDailyBars('dispbody', rows, 13, 'Dispatch (T)', 'var(--accent)', 15);
+
+    // Oil/FO card
+    renderOil(rows);
+
+  } catch(e) {
+    showError('kpi-rm', e);
+    console.error('Dashboard load error:', e);
+  }
+}
+
+function render57F4(outStr, inStr, rows) {
+  const out = parseFloat(outStr) || 0;
+  const inp = parseFloat(inStr)  || 0;
+  const gap = out - inp;
+  const pct = out > 0 ? (inp / out * 100) : 0;
+
+  document.getElementById('f4meta').textContent =
+    `Gap: ${fmtNum(gap)} T`;
+
+  document.getElementById('f4body').innerHTML = `
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:var(--muted)">Outward (sent)</span>
+        <span style="font-family:var(--mono);font-size:13px;color:var(--text)">${fmtNum(outStr)} T</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:var(--muted)">Inward (returned)</span>
+        <span style="font-family:var(--mono);font-size:13px;color:var(--green)">${fmtNum(inStr)} T</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:11px;color:var(--muted)">Still with vendors</span>
+        <span style="font-family:var(--mono);font-size:13px;color:var(--amber)">${fmtNum(gap)} T</span>
+      </div>
+      <div style="background:var(--border);border-radius:4px;height:10px;overflow:hidden">
+        <div style="height:100%;width:${Math.min(pct,100).toFixed(1)}%;background:var(--green);border-radius:4px;transition:width 1s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span style="font-size:10px;color:var(--muted)">% returned</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text)">${pct.toFixed(1)}%</span>
+      </div>
+    </div>
+    <div style="padding:8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-radius:4px;font-size:10px;color:#fcd34d;font-family:var(--mono)">
+      ⚠ Reconcile before March 31
+    </div>
+  `;
+}
+
+function renderDailyBars(containerId, rows, rowIdx, label, color, maxDays) {
+  const row = rows[rowIdx] || [];
+  // cols D(3) onwards = days 1-31
+  const days = [];
+  for (let i = 3; i < Math.min(row.length, 3 + maxDays); i++) {
+    const v = parseFloat(row[i]);
+    if (!isNaN(v) && v > 0) days.push({ day: i - 2, val: v });
+  }
+
+  if (!days.length) {
+    document.getElementById(containerId).innerHTML =
+      '<div style="padding:16px;text-align:center;color:var(--muted);font-size:11px">No data</div>';
+    return;
+  }
+
+  const max = Math.max(...days.map(d => d.val));
+  const recent = days.slice(-10);
+
+  document.getElementById(containerId).innerHTML = `
+    <div class="bar-chart">
+      ${recent.map(d => `
+        <div class="bar-row">
+          <div class="bar-label">Mar ${String(d.day).padStart(2,'0')}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${(d.val/max*100).toFixed(1)}%;background:${color}"></div>
+          </div>
+          <div class="bar-value">${d.val.toFixed(1)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderOil(rows) {
+  // Row 26 = Forge Shop FO per ton
+  // Row 27 = HT FO per ton
+  const forgeRow = rows[25] || [];
+  const htRow    = rows[26] || [];
+
+  const forgeLast = forgeRow.slice(3).filter(v => parseFloat(v) > 0).slice(-1)[0];
+  const htLast    = htRow.slice(3).filter(v => parseFloat(v) > 0).slice(-1)[0];
+
+  const forgeAvg = forgeRow.slice(3)
+    .map(v => parseFloat(v))
+    .filter(v => !isNaN(v) && v > 0);
+  const avgF = forgeAvg.length ? (forgeAvg.reduce((a,b)=>a+b,0)/forgeAvg.length).toFixed(1) : '—';
+
+  document.getElementById('oilbody').innerHTML = `
+    <div class="gauge-row">
+      <div class="gauge-label">Forge Shop FO/ton</div>
+      <div class="gauge-bar">
+        <div class="gauge-fill" style="width:${Math.min((parseFloat(forgeLast)||0)/200*100,100).toFixed(0)}%;background:var(--accent)"></div>
+      </div>
+      <div class="gauge-pct" style="color:var(--accent)">${forgeLast||'—'}</div>
+    </div>
+    <div class="gauge-row">
+      <div class="gauge-label">HT Shop FO/ton</div>
+      <div class="gauge-bar">
+        <div class="gauge-fill" style="width:${Math.min((parseFloat(htLast)||0)/50*100,100).toFixed(0)}%;background:var(--cyan)"></div>
+      </div>
+      <div class="gauge-pct" style="color:var(--cyan)">${htLast||'—'}</div>
+    </div>
+    <div style="margin-top:12px;padding:8px;background:var(--border);border-radius:4px">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Forge Shop Monthly Average</div>
+      <div style="font-family:var(--mono);font-size:16px;color:var(--text)">${avgF} <span style="font-size:10px;color:var(--muted)">L/ton</span></div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ELECTRICITY SHEET
+// ═══════════════════════════════════════════════════════
+async function loadElectricity() {
+  try {
+    const rows = await fetchCSV(SHEETS.electricity, 732314575);
+
+    // Columns: A=Timestamp, B=Date, C=Operator,
+    // D=Main MSEB, E=3200AM ACB, F=Forge1, G=Forge2,
+    // H=Grinding, I=HT, J=Die Shop, K=Machine Shop...
+
+    const dataRows = rows.slice(1).filter(r => r[1] && parseFloat(r[3]) > 0);
+    const last10   = dataRows.slice(-10);
+
+    if (!last10.length) {
+      document.getElementById('elecbody').innerHTML =
+        '<div class="error-msg">No electricity data found</div>';
+      return;
+    }
+
+    const latest    = last10[last10.length - 1];
+    const latestDate = latest[1];
+    document.getElementById('elecmeta').textContent = latestDate;
+
+    const sections = [
+      { name: 'Forge Shop 1',   col: 5  },
+      { name: 'Forge Shop 2',   col: 6  },
+      { name: 'Heat Treatment', col: 8  },
+      { name: 'Machine Shop',   col: 10 },
+      { name: 'Die Shop',       col: 9  },
+      { name: 'Compressor',     col: 11 },
+    ];
+
+    const maxVal = Math.max(...sections.map(s => parseFloat(latest[s.col]) || 0));
+
+    document.getElementById('elecbody').innerHTML = `
+      <div class="bar-chart">
+        ${sections.map(s => {
+          const v = parseFloat(latest[s.col]) || 0;
+          const pct = maxVal > 0 ? (v / maxVal * 100).toFixed(1) : 0;
+          return `
+            <div class="bar-row">
+              <div class="bar-label">${s.name}</div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:${pct}%;background:var(--cyan)"></div>
+              </div>
+              <div class="bar-value">${v.toLocaleString()}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div style="margin-top:10px;padding:6px 8px;background:var(--border);border-radius:3px;font-family:var(--mono);font-size:10px;color:var(--muted)">
+        Total MSEB: <span style="color:var(--text)">${parseFloat(latest[3]).toLocaleString() || '—'}</span> units
+      </div>
+    `;
+
+    // Check if electricity per kg is broken
+    const mainUnits = parseFloat(latest[3]);
+    if (mainUnits > 0) {
+      addFlag('Electricity/kg formula broken on dashboard — units exist but not linked');
+    }
+
+  } catch(e) {
+    document.getElementById('elecbody').innerHTML =
+      `<div class="error-msg">Sheet not public yet<br>${e.message}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MACHINE SHOP
+// ═══════════════════════════════════════════════════════
+async function loadMachineShop() {
+  try {
+    const rows = await fetchCSV(SHEETS.machineShop);
+
+    // Find today's or most recent entries
+    const today = new Date().toLocaleDateString('en-GB').split('/').reverse().join('-');
+    const dataRows = rows.slice(2).filter(r => r[1]);
+
+    // Group by date and machine
+    const byDate = {};
+    dataRows.forEach(r => {
+      const date = r[1]?.trim();
+      if (!date) return;
+      if (!byDate[date]) byDate[date] = [];
+      byDate[date].push(r);
+    });
+
+    const dates   = Object.keys(byDate).sort().slice(-3);
+    const lastDate = dates[dates.length - 1];
+    const lastRows = byDate[lastDate] || [];
+
+    document.getElementById('cncmeta').textContent = lastDate || '—';
+
+    // Sum CNC output per machine (CNC01=col26-30, CNC02=col31-36, etc.)
+    // From our data map: CNC01 starts at col E(4) index, Process col
+    // Col indices from header: CNC01=cols 26-30, CNC02=31-36, 03=37-42, 04=43-48, 05=49-54
+    const cncCols = [
+      { name: 'CNC 01', qtyCol: 28 },
+      { name: 'CNC 02', qtyCol: 34 },
+      { name: 'CNC 03', qtyCol: 40 },
+      { name: 'CNC 04', qtyCol: 46 },
+      { name: 'CNC 05', qtyCol: 52 },
+    ];
+
+    const cncTotals = cncCols.map(c => {
+      const total = lastRows.reduce((sum, r) => {
+        const v = parseInt(r[c.qtyCol]) || 0;
+        return sum + v;
+      }, 0);
+      return { name: c.name, total };
+    });
+
+    const maxCNC = Math.max(...cncTotals.map(c => c.total), 1);
+
+    // Check for missed slots — 11 slots per day
+    const expectedSlots = 11;
+    const actualSlots   = lastRows.length;
+    const missedSlots   = Math.max(0, expectedSlots - actualSlots);
+
+    document.getElementById('cncbody').innerHTML = `
+      <div class="bar-chart" style="margin-bottom:12px">
+        ${cncTotals.map(c => `
+          <div class="bar-row">
+            <div class="bar-label">${c.name}</div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${(c.total/maxCNC*100).toFixed(0)}%;background:var(--blue)"></div>
+            </div>
+            <div class="bar-value">${c.total} pcs</div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;padding:8px;background:var(--border);border-radius:3px;text-align:center">
+          <div style="font-size:10px;color:var(--muted)">Slots filled</div>
+          <div style="font-family:var(--mono);font-size:16px;color:${actualSlots>=11?'var(--green)':'var(--amber)'}">
+            ${actualSlots}/${expectedSlots}
+          </div>
+        </div>
+        ${missedSlots > 0 ? `
+        <div style="flex:1;padding:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);border-radius:3px;text-align:center">
+          <div style="font-size:10px;color:var(--red)">Missed slots</div>
+          <div style="font-family:var(--mono);font-size:16px;color:var(--red)">${missedSlots}</div>
+        </div>` : ''}
+      </div>
+    `;
+
+    if (missedSlots > 0) {
+      addFlag(`Machine Shop: ${missedSlots} missed 2hr entries (${lastDate})`);
+    }
+
+  } catch(e) {
+    document.getElementById('cncbody').innerHTML =
+      `<div class="error-msg">Sheet not public yet<br>${e.message}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MISSED ENTRIES
+// ═══════════════════════════════════════════════════════
+async function loadMissedEntries() {
+  const sections = [
+    { name: 'Machine Shop', id: SHEETS.machineShop, gid: 0,   expectedPerDay: 11 },
+    { name: 'Electricity',  id: SHEETS.electricity, gid: 732314575, expectedPerDay: 1  },
+    { name: '57F4 Inward',  id: SHEETS.f4inward,   gid: 0,   expectedPerDay: 1  },
+    { name: '57F4 Outward', id: SHEETS.f4outward,  gid: 0,   expectedPerDay: 1  },
+  ];
+
+  const results = await Promise.allSettled(
+    sections.map(s => fetchCSV(s.id, s.gid))
+  );
+
+  const today = new Date();
+  const todayStr = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
+
+  let html = '<div class="missed-grid">';
+
+  sections.forEach((s, i) => {
+    const result = results[i];
+    if (result.status === 'rejected') {
+      html += `
+        <div class="missed-item missed-warn">
+          <div class="missed-machine">${s.name}</div>
+          <div class="missed-count">?</div>
+          <div class="missed-label">Not public</div>
+        </div>`;
+      return;
+    }
+
+    const rows = result.value.slice(1).filter(r => r[1] && r[1].trim());
+    // Find today's entries
+    const todayRows = rows.filter(r => {
+      const d = r[1]?.trim();
+      return d && (d.includes(todayStr) ||
+             d.startsWith(String(today.getDate()).padStart(2,'0') + '/') ||
+             d.includes(`/${today.getDate()}/`) ||
+             d.includes(today.toISOString().split('T')[0]));
+    });
+
+    const count   = todayRows.length;
+    const missing = Math.max(0, s.expectedPerDay - count);
+    const cls     = missing === 0 ? 'missed-ok' : (missing < s.expectedPerDay ? 'missed-warn' : 'missed-alert');
+
+    html += `
+      <div class="missed-item ${cls}">
+        <div class="missed-machine">${s.name}</div>
+        <div class="missed-count">${count}</div>
+        <div class="missed-label">${missing > 0 ? missing + ' missing' : 'Complete'}</div>
+      </div>`;
+
+    if (missing > 0) {
+      addFlag(`${s.name}: ${missing} entry missing today`);
+    }
+  });
+
+  html += '</div>';
+  document.getElementById('missedbody').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
+//  RED FLAGS
+// ═══════════════════════════════════════════════════════
+const flagSet = new Set();
+
+function addFlag(msg) {
+  if (flagSet.has(msg)) return;
+  flagSet.add(msg);
+  const banner = document.getElementById('redFlagBanner');
+  const grid   = document.getElementById('flagsGrid');
+  banner.style.display = 'block';
+  const item = document.createElement('div');
+  item.className = 'flag-item';
+  item.innerHTML = `⚠ ${msg}`;
+  grid.appendChild(item);
+}
+
+function showError(elId, e) {
+  const el = document.getElementById(elId);
+  if (el) el.textContent = 'Error';
+}
+
+// ═══════════════════════════════════════════════════════
+//  LOAD ALL
+// ═══════════════════════════════════════════════════════
+async function loadAll() {
+  // Clear flags
+  flagSet.clear();
+  document.getElementById('flagsGrid').innerHTML = '';
+  document.getElementById('redFlagBanner').style.display = 'none';
+
+  // Reset spinners
+  ['f4body','elecbody','oilbody','cncbody','missedbody','rmbody','prodbody','dispbody']
+    .forEach(id => {
+      document.getElementById(id).innerHTML =
+        '<div class="loading"><div class="spinner"></div>Loading...</div>';
+    });
+
+  document.getElementById('lastUpdated').textContent =
+    'Updated: ' + new Date().toLocaleTimeString('en-IN');
+
+  await Promise.allSettled([
+    loadDashboard(),
+    loadElectricity(),
+    loadMachineShop(),
+    loadMissedEntries(),
+  ]);
+}
+
+// Auto-refresh every 5 minutes
+loadAll();
+setInterval(loadAll, 5 * 60 * 1000);
+</script>
+</body>
+</html>
