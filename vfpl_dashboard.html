@@ -7,7 +7,7 @@
 <title>VFPL Operations Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0c10;--s1:#111318;--s2:#181c24;--border:#1e2330;--text:#e8eaf0;--muted:#4a5268;--accent:#e8673d;--green:#34d399;--amber:#fbbf24;--blue:#60a5fa;--red:#f87171;--cyan:#22d3ee;--purple:#c4b5fd;--mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;}
+:root{--bg:#0a0c10;--s1:#111318;--s2:#181c24;--border:#1e2330;--text:#e8eaf0;--muted:#4a5268;--accent:#e8673d;--green:#34d399;--amber:#fbbf24;--blue:#60a5fa;--red:#f87171;--cyan:#22d3ee;--mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;min-height:100vh;}
 .hdr{background:var(--s1);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
@@ -26,14 +26,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13
 .flags-grid{display:flex;flex-wrap:wrap;gap:6px;}
 .flag-item{padding:3px 9px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:3px;font-size:11px;color:#fca5a5;}
 .main{padding:16px 20px;max-width:1400px;margin:0 auto;}
-.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
 .kpi{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:12px 14px;position:relative;overflow:hidden;}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--accent));}
 .kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
 .kpi-value{font-family:var(--mono);font-size:20px;font-weight:600;line-height:1;}
 .kpi-sub{font-size:10px;color:var(--muted);margin-top:3px;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
 .card{background:var(--s1);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
 .card-h{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .card-title{font-size:11px;font-weight:600;letter-spacing:.05em;display:flex;align-items:center;gap:7px;}
@@ -41,19 +40,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13
 .card-meta{font-family:var(--mono);font-size:10px;color:var(--muted);}
 .card-b{padding:14px 15px;}
 .bar-chart{display:flex;flex-direction:column;gap:7px;}
-.bar-row{display:grid;grid-template-columns:110px 1fr 65px;align-items:center;gap:8px;}
+.bar-row{display:grid;grid-template-columns:120px 1fr 65px;align-items:center;gap:8px;}
 .bar-label{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:3px;transition:width .8s ease;}
 .bar-val{font-family:var(--mono);font-size:10px;text-align:right;}
 .f4-bar{height:10px;background:var(--border);border-radius:5px;overflow:hidden;margin:8px 0;}
-.f4-fill{height:100%;background:var(--green);border-radius:5px;transition:width 1s ease;}
+.f4-fill{height:100%;background:var(--green);border-radius:5px;}
 .tw{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:11px;}
 thead th{background:var(--s2);padding:8px 10px;text-align:left;font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;}
 tbody td{padding:8px 10px;border-bottom:1px solid rgba(30,35,48,.4);vertical-align:middle;}
 tbody tr:last-child td{border:none;}
-tbody tr:hover td{background:rgba(255,255,255,.02);}
 .tmono{font-family:var(--mono);font-size:10px;}
 .chip{display:inline-flex;padding:2px 7px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:500;}
 .chip-red{background:rgba(248,113,113,.15);color:#fca5a5;}
@@ -64,8 +62,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02);}
 @keyframes spin{to{transform:rotate(360deg);}}
 .err{padding:12px;color:#fca5a5;font-family:var(--mono);font-size:11px;background:rgba(248,113,113,.06);border-radius:4px;}
 .c-green{color:var(--green);}.c-amber{color:var(--amber);}.c-red{color:var(--red);}.c-muted{color:var(--muted);}
-@media(max-width:1100px){.kpi-row{grid-template-columns:repeat(3,1fr);}.grid3{grid-template-columns:1fr 1fr;}}
-@media(max-width:700px){.kpi-row{grid-template-columns:repeat(2,1fr);}.grid2,.grid3{grid-template-columns:1fr;}.main{padding:10px;}}
+@media(max-width:700px){.kpi-row{grid-template-columns:repeat(2,1fr);}.grid2{grid-template-columns:1fr;}.main{padding:10px;}}
 </style>
 </head>
 <body>
@@ -88,95 +85,84 @@ tbody tr:hover td{background:rgba(255,255,255,.02);}
 
 <div class="main">
 <div class="kpi-row">
-  <div class="kpi" style="--kc:var(--green)"><div class="kpi-label">CNC Output Today</div><div class="kpi-value" id="kpi-cnc">—</div><div class="kpi-sub">Total pieces</div></div>
-  <div class="kpi" style="--kc:var(--cyan)"><div class="kpi-label">Electricity Today</div><div class="kpi-value" id="kpi-elec">—</div><div class="kpi-sub">Main MSEB units</div></div>
-  <div class="kpi" style="--kc:var(--accent)"><div class="kpi-label">IBH Units MTD</div><div class="kpi-value" id="kpi-ibh">—</div><div class="kpi-sub">Induction heating</div></div>
-  <div class="kpi" style="--kc:var(--blue)"><div class="kpi-label">HT Units MTD</div><div class="kpi-value" id="kpi-ht">—</div><div class="kpi-sub">Heat treatment</div></div>
-  <div class="kpi" style="--kc:var(--amber)"><div class="kpi-label">57F4 With Vendors</div><div class="kpi-value" id="kpi-f4" style="color:var(--amber)">—</div><div class="kpi-sub">Pieces outstanding</div></div>
-  <div class="kpi" style="--kc:var(--red)"><div class="kpi-label">Missed Entries</div><div class="kpi-value" id="kpi-missed" style="color:var(--red)">—</div><div class="kpi-sub">Today</div></div>
+  <div class="kpi" style="--kc:var(--cyan)">
+    <div class="kpi-label">Main MSEB (Latest)</div>
+    <div class="kpi-value" id="kpi-elec">—</div>
+    <div class="kpi-sub" id="kpi-elec-date">units</div>
+  </div>
+  <div class="kpi" style="--kc:var(--accent)">
+    <div class="kpi-label">IBH Total (Latest)</div>
+    <div class="kpi-value" id="kpi-ibh">—</div>
+    <div class="kpi-sub">Induction furnaces</div>
+  </div>
+  <div class="kpi" style="--kc:var(--amber)">
+    <div class="kpi-label">57F4 With Vendors</div>
+    <div class="kpi-value" id="kpi-f4" style="color:var(--amber)">—</div>
+    <div class="kpi-sub">Pieces outstanding</div>
+  </div>
+  <div class="kpi" style="--kc:var(--red)">
+    <div class="kpi-label">Data Gap</div>
+    <div class="kpi-value" id="kpi-gap" style="color:var(--red)">—</div>
+    <div class="kpi-sub">Days since last entry</div>
+  </div>
 </div>
 
 <div class="grid2">
   <div class="card">
-    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--blue)"></div>Machine Shop — CNC Output</div><div class="card-meta" id="cncMeta">Loading...</div></div>
-    <div class="card-b" id="cncBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-  </div>
-  <div class="card">
-    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--cyan)"></div>Electricity — Section Wise</div><div class="card-meta" id="elecMeta">Loading...</div></div>
+    <div class="card-h">
+      <div class="card-title"><div class="cd" style="background:var(--cyan)"></div>Electricity — Section Wise</div>
+      <div class="card-meta" id="elecMeta">Loading...</div>
+    </div>
     <div class="card-b" id="elecBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
   </div>
+  <div class="card">
+    <div class="card-h">
+      <div class="card-title"><div class="cd" style="background:var(--accent)"></div>IBH + Press + HT Tempering</div>
+      <div class="card-meta" id="ibhMeta">Induction furnaces</div>
+    </div>
+    <div class="card-b" id="ibhBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
 </div>
 
 <div class="grid2">
   <div class="card">
-    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--accent)"></div>IBH + Press Electricity</div><div class="card-meta">Induction furnaces + presses</div></div>
-    <div class="card-b" id="ibhBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-  </div>
-  <div class="card">
-    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--amber)"></div>57F4 — Job Work Reconciliation</div><div class="card-meta" id="f4Meta">Inward vs Outward</div></div>
+    <div class="card-h">
+      <div class="card-title"><div class="cd" style="background:var(--amber)"></div>57F4 Job Work — Reconciliation</div>
+      <div class="card-meta" id="f4Meta">Loading...</div>
+    </div>
     <div class="card-b" id="f4Body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
   </div>
+  <div class="card">
+    <div class="card-h">
+      <div class="card-title"><div class="cd" style="background:var(--blue)"></div>Machine Shop — Recent Entries</div>
+      <div class="card-meta" id="cncMeta">Loading...</div>
+    </div>
+    <div class="card-b" id="cncBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
 </div>
 
 <div class="card" style="margin-bottom:14px">
-  <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--red)"></div>Missed Entries Today</div><div class="card-meta">All forms</div></div>
-  <div class="card-b" id="missedBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-</div>
-
-<div class="card" style="margin-bottom:14px">
-  <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--green)"></div>Machine Shop — Shift Detail Today</div><div class="card-meta" id="shiftMeta">All machines</div></div>
-  <div class="card-b" id="shiftBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  <div class="card-h">
+    <div class="card-title"><div class="cd" style="background:var(--red)"></div>Data Entry Status — Last 7 Days</div>
+    <div class="card-meta">Missing entries by date</div>
+  </div>
+  <div class="card-b" id="statusBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
 </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════
-// CONFIRMED SHEET STRUCTURE
-//
-// ELECTRICITY (1nUvf-...):
-//   Col 0: Timestamp, Col 1: DATE, Col 2: Operator
-//   Col 3: Main MSEB, Col 4: 3200AM ACB
-//   Col 5: Forge Shop 1, Col 6: Forge Shop 2
-//   Col 7: Grinding, Col 8: HT, Col 9: Die Shop
-//   Col 10: Machine Shop, Col 11: Compressor 75CPA
-//   Col 12: Compressor 120CPA
-//   Col 13: IBH 350 KW-1, Col 14: IBH 300 KW-2
-//   Col 15: IBH 300 KW-3, Col 16: IBH 600 KW-4
-//   Col 17: IBH 150 KW-5
-//   Col 18: HT 90KW TEMP 1, Col 19: HT 90KW TEMP 2
-//   Col 20: 2500 Ton Press, Col 21: 1300 Ton Press...
-//   NOTE: No oil columns in this sheet
-//
-// F4 OUTWARD (1yRsAs7...):
-//   Col 0: Timestamp, Col 1: Submission Type
-//   Col 2: Date, Col 3: Vendor Name
-//   Col 5: VF No 1, Col 6: Qty 1
-//   Col 7: VF No 2, Col 8: Qty 2
-//   Col 9: VF No 3, Col 10: Qty 3
-//   ... up to Col 23: VF No 10, Col 24: Qty 10
-//
-// F4 INWARD (1uX7Lq...):
-//   Col 0: Date, Col 1: Vendor Name
-//   Col 2: VF No, Col 3: 57F4 Number
-//   Col 4: 57F4 Date, Col 5: Quantity, Col 6: Month
-//
-// MACHINE SHOP (1txZM9... gid=97886257):
-//   Row 0: Section headers
-//   Row 1: Column headers (Timestamp,Date,Shift,Supervisor,...)
-//   Data from Row 2
-// ═══════════════════════════════════════════
-
 const URLS = {
-  machineShop: 'https://docs.google.com/spreadsheets/d/1txZM9a9_OSG-ZWYaAEBLKj-9M7LYLrFyl0kJkPsTMGI/export?format=csv&gid=97886257',
-  electricity:  'https://docs.google.com/spreadsheets/d/1nUvf-UWjBSbSWnZTNph-gRUbjzuguGlidpYBKshKUNQ/export?format=csv',
-  f4inward:     'https://docs.google.com/spreadsheets/d/1uX7LqWXwhzA1sLu3TUS-WJ_JLeW1JdOmLeDgNhf2Zfg/export?format=csv',
-  f4outward:    'https://docs.google.com/spreadsheets/d/1yRsAs7zV0HvH63Ah64D0fcttNAhmrRI6AX1MHKvRyxg/export?format=csv',
+  electricity: 'https://docs.google.com/spreadsheets/d/1nUvf-UWjBSbSWnZTNph-gRUbjzuguGlidpYBKshKUNQ/export?format=csv',
+  f4inward:    'https://docs.google.com/spreadsheets/d/1uX7LqWXwhzA1sLu3TUS-WJ_JLeW1JdOmLeDgNhf2Zfg/export?format=csv',
+  f4outward:   'https://docs.google.com/spreadsheets/d/1yRsAs7zV0HvH63Ah64D0fcttNAhmrRI6AX1MHKvRyxg/export?format=csv',
+  machineShop: 'https://docs.google.com/spreadsheets/d/1txZM9a9_OSG-ZWYaAEBLKj-9M7LYLrFyl0kJkPsTMGI/export?format=csv',
 };
 
 async function fetchCSV(url) {
   const r = await fetch(url);
   if (!r.ok) throw new Error('HTTP ' + r.status);
-  return r.text().then(t => t.split('\n').map(line => {
+  const t = await r.text();
+  return t.split('\n').map(line => {
     const cols = []; let cur = '', inQ = false;
     for (const c of line) {
       if (c === '"') { inQ = !inQ; }
@@ -185,16 +171,31 @@ async function fetchCSV(url) {
     }
     cols.push(cur.trim());
     return cols;
-  }));
+  });
 }
 
-function num(v) { const n = parseFloat(String(v||'').replace(/[^0-9.-]/g,'')); return isNaN(n) ? 0 : n; }
+function num(v) { const n = parseFloat(String(v||'').replace(/[^0-9.-]/g,'')); return isNaN(n)?0:n; }
 
-function todayStr() {
-  const t = new Date();
-  return String(t.getDate()).padStart(2,'0') + '/' +
-         String(t.getMonth()+1).padStart(2,'0') + '/' +
-         t.getFullYear();
+// Parse DD/MM/YYYY to Date
+function parseDate(str) {
+  if (!str) return null;
+  const s = str.trim();
+  // DD/MM/YYYY
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+  // Try direct parse
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
+function daysBetween(d1, d2) {
+  return Math.round((d2 - d1) / (1000*60*60*24));
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return String(d.getDate()).padStart(2,'0') + '/' +
+         String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
 }
 
 const flags = new Set();
@@ -208,142 +209,82 @@ function addFlag(msg) {
   document.getElementById('flagsGrid').appendChild(d);
 }
 
-// ── MACHINE SHOP ─────────────────────────────────────
-// Row 0 = section names, Row 1 = col headers, data from Row 2
-async function loadMachineShop() {
-  try {
-    const rows = await fetchCSV(URLS.machineShop);
-    if (rows.length < 3) throw new Error('No data');
-    const sR = rows[0], cH = rows[1];
-    const data = rows.slice(2).filter(r => r[0] || r[1]);
-    const tS = todayStr();
-
-    const todayData = data.filter(r => {
-      const d = (r[1] || r[0]).trim();
-      return d === tS || d.startsWith(tS);
-    });
-
-    // Find all machines from section header row
-    const machines = [];
-    sR.forEach((h, i) => {
-      if (!h || !h.trim()) return;
-      for (let j = i; j < Math.min(i+8, cH.length); j++) {
-        if (cH[j] && cH[j].toUpperCase().includes('QTY')) {
-          if (!machines.find(m => m.col === j))
-            machines.push({ name: h.replace(/^\d+\)\s*/, ''), col: j });
-          break;
-        }
-      }
-    });
-
-    const mq = {};
-    machines.forEach(m => { mq[m.name] = 0; });
-    todayData.forEach(r => { machines.forEach(m => { mq[m.name] += num(r[m.col]); }); });
-
-    const total = Object.values(mq).reduce((a,b) => a+b, 0);
-    document.getElementById('kpi-cnc').textContent = total > 0 ? total.toLocaleString() : '0';
-    document.getElementById('cncMeta').textContent = todayData.length + ' entries today (' + tS + ')';
-
-    const active = Object.entries(mq).filter(([,v]) => v > 0);
-    const maxQ = Math.max(...active.map(([,v]) => v), 1);
-
-    document.getElementById('cncBody').innerHTML = active.length ?
-      '<div class="bar-chart">' +
-      active.map(([n,q]) =>
-        '<div class="bar-row"><div class="bar-label">' + n.slice(0,14) + '</div>' +
-        '<div class="bar-track"><div class="bar-fill" style="width:' + Math.round(q/maxQ*100) + '%;background:var(--blue)"></div></div>' +
-        '<div class="bar-val c-green">' + q.toLocaleString() + '</div></div>'
-      ).join('') + '</div>' :
-      '<div style="padding:16px;text-align:center;color:var(--muted);font-size:11px">No entries today (' + tS + ')<br><span style="font-size:10px">Last entry: ' + (data[data.length-1]?.[1]||'—') + '</span></div>';
-
-    // Shift table
-    document.getElementById('shiftMeta').textContent = todayData.length + ' slots — ' + tS;
-    document.getElementById('shiftBody').innerHTML = todayData.length ?
-      '<div class="tw"><table><thead><tr><th>Shift</th><th>Supervisor</th><th>VF No</th><th>QTY</th><th>Remark</th></tr></thead><tbody>' +
-      todayData.slice(0,15).map(r =>
-        '<tr><td class="tmono">' + (r[2]||'—').replace(/^\d+\)\s*/,'').slice(0,15) +
-        '</td><td>' + (r[3]||'—') +
-        '</td><td class="tmono" style="color:var(--blue)">' + (r[5]||'—') +
-        '</td><td class="tmono c-green">' + (r[6]||'—') +
-        '</td><td style="color:var(--muted);font-size:10px">' + (r[7]||'') + '</td></tr>'
-      ).join('') + '</tbody></table></div>' :
-      '<div style="padding:16px;text-align:center;color:var(--muted)">No entries today — last entry: ' + (data[data.length-1]?.[1]||'—') + '</div>';
-
-    if (todayData.length < 5) addFlag('Machine Shop: ' + todayData.length + ' entries today (expected 8+)');
-
-  } catch(e) {
-    document.getElementById('cncBody').innerHTML = '<div class="err">' + e.message + '</div>';
-    document.getElementById('shiftBody').innerHTML = '<div class="err">' + e.message + '</div>';
-  }
-}
-
 // ── ELECTRICITY ───────────────────────────────────────
-// Confirmed column map from headers
+// CONFIRMED COLUMNS:
+// 0=Timestamp, 1=DATE, 2=Operator
+// 3=Main MSEB, 4=3200AM ACB
+// 5=Forge1, 6=Forge2, 7=Grinding, 8=HT, 9=DieShop
+// 10=MachineShop, 11=Compressor75, 12=Compressor120
+// 13=IBH350KW-1, 14=IBH300KW-2, 15=IBH300KW-3
+// 16=IBH600KW-4, 17=IBH150KW-5
+// 18=HT90KW-Temp1, 19=HT90KW-Temp2
+// 20=2500T Press, 21=1300T Press
 async function loadElectricity() {
   try {
     const rows = await fetchCSV(URLS.electricity);
     const data = rows.slice(1).filter(r => r[1] && r[1].trim());
     if (!data.length) throw new Error('No data');
+
     const latest = data[data.length-1];
-    document.getElementById('elecMeta').textContent = latest[1] || 'Latest';
+    const latestDate = parseDate(latest[1]);
+    const today = new Date();
+    const gapDays = latestDate ? daysBetween(latestDate, today) : 0;
 
-    // Main electricity consumers — confirmed cols
-    const mainSecs = [
-      { name: 'Forge Shop 1', col: 5 },
-      { name: 'Forge Shop 2', col: 6 },
-      { name: 'Grinding',     col: 7 },
-      { name: 'Heat Treatment',col: 8 },
-      { name: 'Die Shop',     col: 9 },
-      { name: 'Machine Shop', col: 10 },
-      { name: 'Compressor 1', col: 11 },
-      { name: 'Compressor 2', col: 12 },
-    ];
-
-    // IBH + Press + HT Tempering — cols 13-22
-    const ibhSecs = [
-      { name: 'IBH 350KW-1',  col: 13 },
-      { name: 'IBH 300KW-2',  col: 14 },
-      { name: 'IBH 300KW-3',  col: 15 },
-      { name: 'IBH 600KW-4',  col: 16 },
-      { name: 'IBH 150KW-5',  col: 17 },
-      { name: 'HT 90KW Temp1',col: 18 },
-      { name: 'HT 90KW Temp2',col: 19 },
-      { name: '2500T Press',  col: 20 },
-      { name: '1300T Press',  col: 21 },
-    ];
+    document.getElementById('elecMeta').textContent = latest[1] + ' (latest entry)';
+    document.getElementById('kpi-elec-date').textContent = latest[1];
 
     const totalMSEB = num(latest[3]);
-    const totalIBH  = ibhSecs.slice(0,5).reduce((s,x) => s + num(latest[x.col]), 0);
-    const totalHT   = ibhSecs.slice(5,7).reduce((s,x) => s + num(latest[x.col]), 0);
+    const ibhTotal  = [13,14,15,16,17].reduce((s,c) => s+num(latest[c]), 0);
+    const htTotal   = [18,19].reduce((s,c) => s+num(latest[c]), 0);
+    const pressTotal= [20,21].reduce((s,c) => s+num(latest[c]), 0);
 
     document.getElementById('kpi-elec').textContent = totalMSEB > 0 ? totalMSEB.toLocaleString() : '—';
-    document.getElementById('kpi-ibh').textContent  = totalIBH  > 0 ? totalIBH.toLocaleString()  : '—';
-    document.getElementById('kpi-ht').textContent   = totalHT   > 0 ? totalHT.toLocaleString()   : '—';
+    document.getElementById('kpi-ibh').textContent  = ibhTotal  > 0 ? ibhTotal.toLocaleString()  : '—';
+    document.getElementById('kpi-gap').textContent  = gapDays + ' days';
 
-    // Main sections bar chart
-    const maxE = Math.max(...mainSecs.map(s => num(latest[s.col])), 1);
+    if (gapDays >= 2) addFlag('Electricity: No entry since ' + latest[1] + ' (' + gapDays + ' days gap)');
+
+    // Main sections
+    const mainSecs = [
+      {n:'Forge Shop 1', c:5}, {n:'Forge Shop 2', c:6},
+      {n:'Grinding',     c:7}, {n:'Heat Treatment',c:8},
+      {n:'Die Shop',     c:9}, {n:'Machine Shop',  c:10},
+      {n:'Compressor 1', c:11},{n:'Compressor 2',  c:12},
+    ];
+    const maxE = Math.max(...mainSecs.map(s=>num(latest[s.c])),1);
+
     document.getElementById('elecBody').innerHTML =
       '<div class="bar-chart">' +
       mainSecs.map(s => {
-        const v = num(latest[s.col]);
-        return '<div class="bar-row"><div class="bar-label">' + s.name + '</div>' +
-          '<div class="bar-track"><div class="bar-fill" style="width:' + Math.round(v/maxE*100) + '%;background:var(--cyan)"></div></div>' +
-          '<div class="bar-val c-green">' + (v > 0 ? v.toLocaleString() : '—') + '</div></div>';
+        const v = num(latest[s.c]);
+        return '<div class="bar-row"><div class="bar-label">' + s.n +
+          '</div><div class="bar-track"><div class="bar-fill" style="width:' +
+          Math.round(v/maxE*100) + '%;background:var(--cyan)"></div></div>' +
+          '<div class="bar-val c-green">' + (v>0?v.toLocaleString():'0') + '</div></div>';
       }).join('') + '</div>' +
       '<div style="background:var(--s2);border-radius:4px;padding:8px;margin-top:10px;font-family:var(--mono);font-size:11px;display:flex;justify-content:space-between">' +
       '<span style="color:var(--muted)">Main MSEB Total:</span><span>' + totalMSEB.toLocaleString() + ' units</span></div>';
 
-    // IBH bar chart
-    const maxI = Math.max(...ibhSecs.map(s => num(latest[s.col])), 1);
+    // IBH + Press
+    const ibhSecs = [
+      {n:'IBH 350KW-1', c:13},{n:'IBH 300KW-2', c:14},
+      {n:'IBH 300KW-3', c:15},{n:'IBH 600KW-4', c:16},
+      {n:'IBH 150KW-5', c:17},{n:'HT 90KW Tmp1',c:18},
+      {n:'HT 90KW Tmp2',c:19},{n:'2500T Press',  c:20},
+      {n:'1300T Press',  c:21},
+    ];
+    const maxI = Math.max(...ibhSecs.map(s=>num(latest[s.c])),1);
+    document.getElementById('ibhMeta').textContent = 'IBH: ' + ibhTotal.toLocaleString() + ' | HT: ' + htTotal.toLocaleString() + ' | Press: ' + pressTotal.toLocaleString();
     document.getElementById('ibhBody').innerHTML =
       '<div class="bar-chart">' +
       ibhSecs.map(s => {
-        const v = num(latest[s.col]);
-        return '<div class="bar-row"><div class="bar-label">' + s.name + '</div>' +
-          '<div class="bar-track"><div class="bar-fill" style="width:' + Math.round(v/maxI*100) + '%;background:var(--accent)"></div></div>' +
-          '<div class="bar-val" style="color:var(--accent)">' + (v > 0 ? v.toLocaleString() : '—') + '</div></div>';
+        const v = num(latest[s.c]);
+        return '<div class="bar-row"><div class="bar-label">' + s.n +
+          '</div><div class="bar-track"><div class="bar-fill" style="width:' +
+          Math.round(v/maxI*100) + '%;background:var(--accent)"></div></div>' +
+          '<div class="bar-val" style="color:var(--accent)">' + (v>0?v.toLocaleString():'0') + '</div></div>';
       }).join('') + '</div>' +
-      '<div style="margin-top:10px;padding:6px 10px;background:var(--s2);border-radius:4px;font-size:10px;color:var(--muted)">Date: ' + latest[1] + ' | Operator: ' + (latest[2]||'—') + '</div>';
+      '<div style="padding:6px 10px;background:var(--s2);border-radius:4px;margin-top:8px;font-size:10px;color:var(--muted)">Date: ' + latest[1] + ' | Op: ' + (latest[2]||'—') + '</div>';
 
   } catch(e) {
     document.getElementById('elecBody').innerHTML = '<div class="err">' + e.message + '</div>';
@@ -352,9 +293,10 @@ async function loadElectricity() {
 }
 
 // ── 57F4 ─────────────────────────────────────────────
-// INWARD:  Col 5 = Quantity (confirmed)
-// OUTWARD: Multiple VF/Qty pairs: (5,6), (7,8), (9,10), (11,12), (13,14),
-//          (15,16), (17,18), (19,20), (21,22), (23,24)
+// INWARD CONFIRMED: Col 0=Date, Col 1=Vendor, Col 5=Qty
+// OUTWARD CONFIRMED: Col 2=Date, Col 3=Vendor
+//   Qty pairs: (col5,col6), (col7,col8)...(col23,col24)
+//   BUT col5=VF No, col6=Qty — so qty cols are 6,8,10,12,14,16,18,20,22,24
 async function load57F4() {
   try {
     const [iRows, oRows] = await Promise.all([
@@ -362,102 +304,163 @@ async function load57F4() {
       fetchCSV(URLS.f4outward)
     ]);
 
-    const iData = iRows.slice(1).filter(r => r[1] && r[1].trim());
-    // Outward: skip header row (row 0), filter rows with vendor name (col 3)
-    const oData = oRows.slice(1).filter(r => r[3] && r[3].trim());
+    // Inward: skip header row, filter valid
+    const iData = iRows.slice(1).filter(r => r[1] && r[1].trim() && num(r[5]) > 0);
+    // Outward: skip header row, filter Gate Outward only
+    const oData = oRows.slice(1).filter(r => r[1] && r[1].includes('Outward'));
 
     // Inward total — col 5 confirmed
-    const iQty = iData.reduce((s, r) => s + num(r[5]), 0);
+    const iQty = iData.reduce((s,r) => s + num(r[5]), 0);
 
-    // Outward total — sum all qty columns (even cols 6,8,10,12,14,16,18,20,22,24)
-    const oQtyColumns = [6, 8, 10, 12, 14, 16, 18, 20, 22, 24];
-    const oQty = oData.reduce((s, r) => {
-      return s + oQtyColumns.reduce((qs, col) => qs + num(r[col]), 0);
-    }, 0);
+    // Outward — sum qty cols 6,8,10,12,14,16,18,20,22,24
+    const oQtyCols = [6,8,10,12,14,16,18,20,22,24];
+    const oQty = oData.reduce((s,r) => s + oQtyCols.reduce((qs,c) => qs+num(r[c]), 0), 0);
 
     const gap = oQty - iQty;
-    const pct = oQty > 0 ? (iQty / oQty * 100).toFixed(1) : 0;
+    const pct = oQty > 0 ? (iQty/oQty*100).toFixed(1) : 0;
+
+    // Last inward date
+    const lastInDate = iData.length ? iData[iData.length-1][0] : '—';
+    const lastOutDate = oData.length ? oData[oData.length-1][2] : '—';
 
     document.getElementById('kpi-f4').textContent = gap > 0 ? gap.toLocaleString() + ' pcs' : '—';
-    document.getElementById('f4Meta').textContent = iData.length + ' in / ' + oData.length + ' out entries';
+    document.getElementById('f4Meta').textContent = oData.length + ' out entries | ' + iData.length + ' in entries';
 
-    if (gap > 500) addFlag('57F4: ' + gap.toLocaleString() + ' pcs still with vendors — reconcile before March 31');
+    if (gap > 0) addFlag('57F4: ' + gap.toLocaleString() + ' pcs with vendors — last return: ' + lastInDate);
 
-    // Vendor-wise outstanding
+    // Vendor breakdown
     const vg = {};
     oData.forEach(r => {
-      const vendor = r[3] || 'Unknown';
-      const qty = oQtyColumns.reduce((s, col) => s + num(r[col]), 0);
-      vg[vendor] = (vg[vendor] || 0) + qty;
+      const v = r[3] || 'Unknown';
+      vg[v] = (vg[v]||0) + oQtyCols.reduce((s,c) => s+num(r[c]), 0);
     });
     iData.forEach(r => {
-      const vendor = r[1] || 'Unknown';
-      vg[vendor] = (vg[vendor] || 0) - num(r[5]);
+      const v = r[1] || 'Unknown';
+      vg[v] = (vg[v]||0) - num(r[5]);
     });
-    const outstanding = Object.entries(vg).filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]);
+    const outstanding = Object.entries(vg).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
 
     document.getElementById('f4Body').innerHTML =
       '<div style="margin-bottom:12px">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--muted)">Total Outward</span><span class="tmono">' + oQty.toLocaleString() + ' pcs</span></div>' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--muted)">Total Inward</span><span class="tmono c-green">' + iQty.toLocaleString() + ' pcs</span></div>' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="font-size:11px;color:var(--muted)">Still with vendors</span><span class="tmono" style="color:var(--amber)">' + gap.toLocaleString() + ' pcs</span></div>' +
+      '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="font-size:11px;color:var(--muted)">Total Sent Out</span>' +
+      '<span class="tmono">' + oQty.toLocaleString() + ' pcs</span></div>' +
+      '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="font-size:11px;color:var(--muted)">Total Returned</span>' +
+      '<span class="tmono c-green">' + iQty.toLocaleString() + ' pcs</span></div>' +
+      '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="font-size:11px;color:var(--muted)">Still With Vendors</span>' +
+      '<span class="tmono" style="color:var(--amber)">' + gap.toLocaleString() + ' pcs</span></div>' +
+      '<div style="display:flex;justify-content:space-between;padding:6px 0">' +
+      '<span style="font-size:11px;color:var(--muted)">Last Return Date</span>' +
+      '<span class="tmono" style="color:var(--red)">' + lastInDate + '</span></div>' +
       '<div class="f4-bar"><div class="f4-fill" style="width:' + Math.min(parseFloat(pct),100) + '%"></div></div>' +
-      '<div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--muted)">% returned</span><span class="tmono" style="font-size:10px">' + pct + '%</span></div></div>' +
+      '<div style="display:flex;justify-content:space-between">' +
+      '<span style="font-size:10px;color:var(--muted)">% returned</span>' +
+      '<span class="tmono" style="font-size:10px">' + pct + '%</span></div></div>' +
       (outstanding.length ?
-        '<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Vendor-wise outstanding</div>' +
-        '<div class="tw"><table><thead><tr><th>Vendor</th><th>Pcs outstanding</th></tr></thead><tbody>' +
-        outstanding.slice(0,6).map(([v,q]) =>
-          '<tr><td style="font-size:11px">' + v + '</td><td class="tmono" style="color:var(--amber)">' + q.toLocaleString() + '</td></tr>'
+        '<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Vendor Outstanding</div>' +
+        '<div class="tw"><table><thead><tr><th>Vendor</th><th>Pcs with them</th></tr></thead><tbody>' +
+        outstanding.slice(0,8).map(([v,q]) =>
+          '<tr><td style="font-size:11px">' + v +
+          '</td><td class="tmono" style="color:var(--amber)">' + q.toLocaleString() + '</td></tr>'
         ).join('') + '</tbody></table></div>' : '') +
-      '<div style="margin-top:10px;padding:8px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:4px;font-size:10px;color:var(--amber)">⚠ Reconcile before March 31</div>';
+      '<div style="margin-top:10px;padding:8px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:4px;font-size:10px;color:var(--amber)">⚠ Last outward: ' + lastOutDate + ' | Reconcile before March 31</div>';
 
   } catch(e) {
     document.getElementById('f4Body').innerHTML = '<div class="err">' + e.message + '</div>';
   }
 }
 
-// ── MISSED ENTRIES ────────────────────────────────────
-async function loadMissed() {
-  const tS = todayStr();
-  const checks = [
-    { name: 'Machine Shop', url: URLS.machineShop, dateCol: 1, exp: 8,  skip: 2 },
-    { name: 'Electricity',  url: URLS.electricity, dateCol: 1, exp: 1,  skip: 1 },
-    { name: '57F4 Inward',  url: URLS.f4inward,    dateCol: 0, exp: 1,  skip: 1 },
-    { name: '57F4 Outward', url: URLS.f4outward,   dateCol: 2, exp: 1,  skip: 1 },
-  ];
+// ── MACHINE SHOP ─────────────────────────────────────
+// Default tab (gid not needed) — Row 0=section headers, Row 1=col headers, data Row 2+
+// Date is col 1 (DD/MM/YYYY format confirmed)
+async function loadMachineShop() {
+  try {
+    const rows = await fetchCSV(URLS.machineShop);
+    // Find data rows — skip rows until we find timestamp pattern
+    let dataStart = 0;
+    for (let i = 0; i < Math.min(rows.length, 5); i++) {
+      if (rows[i][0] && rows[i][0].match(/\d{2}\/\d{2}\/\d{4}/)) { dataStart = i; break; }
+      if (rows[i][1] && rows[i][1].match(/\d{2}\/\d{2}\/\d{4}/)) { dataStart = i; break; }
+    }
 
-  const results = await Promise.allSettled(checks.map(c => fetchCSV(c.url)));
-  let totalMissed = 0;
+    const data = rows.slice(dataStart).filter(r => r[1] && r[1].match(/\d{2}\/\d{2}\/\d{4}/));
+    if (!data.length) throw new Error('No dated rows found');
 
-  const rows = checks.map((c, i) => {
-    if (results[i].status === 'rejected') return { name: c.name, found: 0, exp: c.exp, st: 'error' };
-    const data = results[i].value.slice(c.skip).filter(r => (r[c.dateCol]||'').trim().startsWith(tS));
-    const miss = Math.max(0, c.exp - data.length);
-    if (miss > 0) totalMissed += miss;
-    return { name: c.name, found: data.length, exp: c.exp, st: miss===0?'ok':data.length===0?'missing':'partial' };
-  });
+    const lastEntry = data[data.length-1];
+    const lastDate  = parseDate(lastEntry[1]);
+    const today     = new Date();
+    const gapDays   = lastDate ? daysBetween(lastDate, today) : 0;
 
-  document.getElementById('kpi-missed').textContent = totalMissed;
-  if (totalMissed > 0) addFlag(totalMissed + ' form entries missing today (' + tS + ')');
+    document.getElementById('cncMeta').textContent = 'Last entry: ' + lastEntry[1] + ' (' + gapDays + ' days ago)';
 
-  document.getElementById('missedBody').innerHTML =
-    '<div class="tw"><table><thead><tr><th>Form</th><th>Expected</th><th>Found Today</th><th>Status</th></tr></thead><tbody>' +
-    rows.map(r =>
-      '<tr><td>' + r.name + '</td><td class="tmono">' + r.exp +
-      '</td><td class="tmono" style="color:' + (r.st==='ok'?'var(--green)':r.st==='missing'?'var(--red)':'var(--amber)') + '">' + r.found +
-      '</td><td><span class="chip ' + (r.st==='ok'?'chip-green':r.st==='missing'?'chip-red':'chip-amber') + '">' +
-      (r.st==='ok'?'Complete':r.st==='missing'?'Missing':'Partial') + '</span></td></tr>'
-    ).join('') + '</tbody></table></div>';
+    if (gapDays >= 2) addFlag('Machine Shop: No entry since ' + lastEntry[1] + ' (' + gapDays + ' days gap)');
+
+    // Show last 10 entries
+    const recent = data.slice(-10).reverse();
+    document.getElementById('cncBody').innerHTML =
+      '<div class="tw"><table><thead><tr><th>Date</th><th>Shift</th><th>Supervisor</th><th>VF No</th><th>QTY</th></tr></thead><tbody>' +
+      recent.map(r =>
+        '<tr><td class="tmono">' + (r[1]||'—') +
+        '</td><td style="font-size:10px;color:var(--muted)">' + (r[2]||'—').replace(/^\d+\)\s*/,'').slice(0,20) +
+        '</td><td style="font-size:11px">' + (r[3]||'—') +
+        '</td><td class="tmono" style="color:var(--blue)">' + (r[5]||'—') +
+        '</td><td class="tmono c-green">' + (r[6]||'—') + '</td></tr>'
+      ).join('') + '</tbody></table></div>' +
+      '<div style="margin-top:8px;padding:8px;background:' + (gapDays>=2?'rgba(248,113,113,.06)':'var(--s2)') +
+      ';border-radius:4px;font-size:11px;font-family:var(--mono);color:' + (gapDays>=2?'var(--red)':'var(--muted)') + '">' +
+      (gapDays >= 2 ? '⚠ ' + gapDays + ' days since last entry. Entries missing for: ' +
+        Array.from({length:gapDays}, (_,i) => { const d=new Date(today); d.setDate(d.getDate()-i); return fmtDate(d); }).slice(0,-1).join(', ') :
+        '✓ Data current') + '</div>';
+
+  } catch(e) {
+    document.getElementById('cncBody').innerHTML = '<div class="err">' + e.message + '</div>';
+  }
 }
 
-// ── LOAD ALL ──────────────────────────────────────────
+// ── DATA STATUS ───────────────────────────────────────
+async function loadStatus() {
+  try {
+    const [eRows, cRows] = await Promise.all([
+      fetchCSV(URLS.electricity),
+      fetchCSV(URLS.machineShop)
+    ]);
+
+    const today = new Date();
+    const last7 = Array.from({length:7}, (_,i) => {
+      const d = new Date(today); d.setDate(d.getDate()-i); return d;
+    });
+
+    // Get all dates with entries
+    const elecDates = new Set(eRows.slice(1).filter(r=>r[1]).map(r=>r[1].trim()));
+    const cncDates  = new Set(cRows.filter(r=>r[1]&&r[1].match(/\d{2}\/\d{2}\/\d{4}/)).map(r=>r[1].trim()));
+
+    document.getElementById('statusBody').innerHTML =
+      '<div class="tw"><table><thead><tr><th>Date</th><th>Electricity</th><th>Machine Shop</th></tr></thead><tbody>' +
+      last7.map(d => {
+        const ds = fmtDate(d);
+        const isWeekend = d.getDay()===0||d.getDay()===6;
+        const eOK = elecDates.has(ds);
+        const cOK = cncDates.has(ds);
+        return '<tr><td class="tmono">' + ds + (isWeekend?' <span style="font-size:9px;color:var(--muted)">(Sun)</span>':'') +
+          '</td><td><span class="chip ' + (eOK?'chip-green':'chip-red') + '">' + (eOK?'✓ Entered':'✗ Missing') + '</span></td>' +
+          '<td><span class="chip ' + (cOK?'chip-green':isWeekend?'chip-amber':'chip-red') + '">' +
+          (cOK?'✓ Entered':isWeekend?'Weekend':'✗ Missing') + '</span></td></tr>';
+      }).join('') + '</tbody></table></div>';
+
+  } catch(e) {
+    document.getElementById('statusBody').innerHTML = '<div class="err">' + e.message + '</div>';
+  }
+}
+
 async function loadAll() {
   flags.clear();
   document.getElementById('flagsGrid').innerHTML = '';
   document.getElementById('flagsBanner').style.display = 'none';
   document.getElementById('lastUpdate').textContent =
-    'Updated: ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'}) + ' IST';
-  await Promise.allSettled([loadMachineShop(), loadElectricity(), load57F4(), loadMissed()]);
+    'Updated: ' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) + ' IST';
+  await Promise.allSettled([loadElectricity(), load57F4(), loadMachineShop(), loadStatus()]);
 }
 
 loadAll();
