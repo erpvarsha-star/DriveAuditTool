@@ -3,169 +3,198 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <title>VFPL Operations Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0a0c10;--s1:#111318;--s2:#181c24;--border:#1e2330;--text:#e8eaf0;--muted:#4a5268;--accent:#e8673d;--green:#34d399;--amber:#fbbf24;--blue:#60a5fa;--red:#f87171;--cyan:#22d3ee;--mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;}
 .hdr{background:var(--s1);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
 .hdr-brand{display:flex;align-items:center;gap:10px;}
 .hdr-hex{width:28px;height:28px;background:var(--accent);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:700;color:#000;}
 .hdr-title{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.1em;}
 .hdr-sub{font-size:10px;color:var(--muted);}
-.hdr-right{display:flex;align-items:center;gap:10px;}
 .live-pill{display:flex;align-items:center;gap:5px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);border-radius:12px;padding:3px 10px;font-family:var(--mono);font-size:10px;color:var(--green);}
 .live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 .refresh-btn{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:4px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:var(--mono);}
 .last-update{font-family:var(--mono);font-size:10px;color:var(--muted);}
-.flags{margin:14px 20px 0;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:10px 14px;display:none;}
-.flags-hdr{font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:.1em;margin-bottom:6px;}
-.flags-grid{display:flex;flex-wrap:wrap;gap:6px;}
-.flag-item{padding:3px 9px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:3px;font-size:11px;color:#fca5a5;}
-.main{padding:16px 20px;max-width:1400px;margin:0 auto;}
-.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
-.kpi{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:12px 14px;position:relative;overflow:hidden;}
-.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--accent));}
-.kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
-.kpi-value{font-family:var(--mono);font-size:20px;font-weight:600;line-height:1;}
-.kpi-sub{font-size:10px;color:var(--muted);margin-top:3px;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
-.card{background:var(--s1);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
-.card-h{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.card-title{font-size:11px;font-weight:600;letter-spacing:.05em;display:flex;align-items:center;gap:7px;}
+.flags{margin:12px 16px 0;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:10px 14px;display:none;}
+.flags-hdr{font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:.1em;margin-bottom:8px;}
+.flags-grid{display:flex;flex-direction:column;gap:4px;}
+.flag-item{padding:5px 10px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:3px;font-size:12px;color:#fca5a5;display:flex;justify-content:space-between;align-items:center;}
+.flag-who{font-family:var(--mono);font-size:10px;color:var(--red);}
+.main{padding:14px 16px;max-width:1400px;margin:0 auto;}
+.section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 0 8px;display:flex;align-items:center;gap:8px;}
+.section-dot{width:6px;height:6px;border-radius:50%;}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:12px;}
+.card-h{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:11px;font-weight:600;letter-spacing:.04em;display:flex;align-items:center;gap:7px;}
 .cd{width:5px;height:5px;border-radius:50%;}
 .card-meta{font-family:var(--mono);font-size:10px;color:var(--muted);}
-.card-b{padding:14px 15px;}
-.bar-chart{display:flex;flex-direction:column;gap:7px;}
-.bar-row{display:grid;grid-template-columns:120px 1fr 65px;align-items:center;gap:8px;}
+.card-b{padding:12px 14px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:12px 14px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--accent));}
+.kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.kpi-value{font-family:var(--mono);font-size:22px;font-weight:600;line-height:1;}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+.bar-chart{display:flex;flex-direction:column;gap:6px;}
+.bar-row{display:grid;grid-template-columns:120px 1fr 60px;align-items:center;gap:8px;}
 .bar-label{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:3px;transition:width .8s ease;}
 .bar-val{font-family:var(--mono);font-size:10px;text-align:right;}
-.f4-bar{height:10px;background:var(--border);border-radius:5px;overflow:hidden;margin:8px 0;}
-.f4-fill{height:100%;background:var(--green);border-radius:5px;}
 .tw{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:11px;}
-thead th{background:var(--s2);padding:8px 10px;text-align:left;font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;}
-tbody td{padding:8px 10px;border-bottom:1px solid rgba(30,35,48,.4);vertical-align:middle;}
+thead th{background:var(--s2);padding:7px 10px;text-align:left;font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody td{padding:7px 10px;border-bottom:1px solid rgba(30,35,48,.4);vertical-align:middle;}
 tbody tr:last-child td{border:none;}
+tbody tr:hover td{background:rgba(255,255,255,.02);}
 .tmono{font-family:var(--mono);font-size:10px;}
 .chip{display:inline-flex;padding:2px 7px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:500;}
 .chip-red{background:rgba(248,113,113,.15);color:#fca5a5;}
 .chip-green{background:rgba(52,211,153,.15);color:#6ee7b7;}
 .chip-amber{background:rgba(251,191,36,.15);color:#fcd34d;}
-.loading{display:flex;align-items:center;justify-content:center;gap:8px;padding:28px;color:var(--muted);font-family:var(--mono);font-size:11px;}
-.spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+.chip-blue{background:rgba(96,165,250,.15);color:#93c5fd;}
+.loading{display:flex;align-items:center;justify-content:center;gap:8px;padding:24px;color:var(--muted);font-family:var(--mono);font-size:11px;}
+.spinner{width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.err{padding:12px;color:#fca5a5;font-family:var(--mono);font-size:11px;background:rgba(248,113,113,.06);border-radius:4px;}
-.c-green{color:var(--green);}.c-amber{color:var(--amber);}.c-red{color:var(--red);}.c-muted{color:var(--muted);}
-@media(max-width:700px){.kpi-row{grid-template-columns:repeat(2,1fr);}.grid2{grid-template-columns:1fr;}.main{padding:10px;}}
+.err{padding:10px;color:#fca5a5;font-family:var(--mono);font-size:11px;background:rgba(248,113,113,.06);border-radius:4px;}
+.c-green{color:var(--green);}.c-amber{color:var(--amber);}.c-red{color:var(--red);}.c-muted{color:var(--muted);}.c-blue{color:var(--blue);}
+.info-box{padding:10px 12px;background:var(--s2);border-radius:4px;font-size:11px;color:var(--muted);margin-top:8px;font-family:var(--mono);}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr);}.grid2,.grid3{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
+
 <header class="hdr">
   <div class="hdr-brand">
     <div class="hdr-hex">VF</div>
-    <div><div class="hdr-title">VFPL OPERATIONS</div><div class="hdr-sub">Live Dashboard — Varsha Forgings Pvt Ltd</div></div>
+    <div>
+      <div class="hdr-title">VFPL OPERATIONS</div>
+      <div class="hdr-sub">Live Dashboard — Varsha Forgings Pvt Ltd</div>
+    </div>
   </div>
-  <div class="hdr-right">
+  <div style="display:flex;align-items:center;gap:10px">
     <div class="live-pill"><div class="live-dot"></div>LIVE</div>
     <div class="last-update" id="lastUpdate">—</div>
     <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
   </div>
 </header>
 
+<!-- RED FLAGS — WHO IS NOT ENTERING DATA -->
 <div class="flags" id="flagsBanner">
-  <div class="flags-hdr">⚠ RED FLAGS — Action Required</div>
+  <div class="flags-hdr">⚠ DATA ENTRY MISSING — Action Required</div>
   <div class="flags-grid" id="flagsGrid"></div>
 </div>
 
 <div class="main">
+
+<!-- KPIs -->
 <div class="kpi-row">
   <div class="kpi" style="--kc:var(--cyan)">
-    <div class="kpi-label">Main MSEB (Latest)</div>
-    <div class="kpi-value" id="kpi-elec">—</div>
-    <div class="kpi-sub" id="kpi-elec-date">units</div>
+    <div class="kpi-label">MSEB Units (Latest)</div>
+    <div class="kpi-value" id="kpi-mseb">—</div>
+    <div class="kpi-sub" id="kpi-mseb-date">—</div>
+  </div>
+  <div class="kpi" style="--kc:var(--green)">
+    <div class="kpi-label">Production MTD</div>
+    <div class="kpi-value" id="kpi-prod">—</div>
+    <div class="kpi-sub">Pieces this month</div>
   </div>
   <div class="kpi" style="--kc:var(--accent)">
-    <div class="kpi-label">IBH Total (Latest)</div>
-    <div class="kpi-value" id="kpi-ibh">—</div>
-    <div class="kpi-sub">Induction furnaces</div>
-  </div>
-  <div class="kpi" style="--kc:var(--amber)">
-    <div class="kpi-label">57F4 With Vendors</div>
-    <div class="kpi-value" id="kpi-f4" style="color:var(--amber)">—</div>
-    <div class="kpi-sub">Pieces outstanding</div>
+    <div class="kpi-label">Oil MTD</div>
+    <div class="kpi-value" id="kpi-oil">—</div>
+    <div class="kpi-sub">Litres this month</div>
   </div>
   <div class="kpi" style="--kc:var(--red)">
-    <div class="kpi-label">Data Gap</div>
-    <div class="kpi-value" id="kpi-gap" style="color:var(--red)">—</div>
-    <div class="kpi-sub">Days since last entry</div>
+    <div class="kpi-label">Missing Today</div>
+    <div class="kpi-value" id="kpi-missing" style="color:var(--red)">—</div>
+    <div class="kpi-sub">Form entries</div>
   </div>
 </div>
 
+<!-- DATA ENTRY STATUS -->
+<div class="section-title"><div class="section-dot" style="background:var(--red)"></div>Data Entry Status — Last 7 Days</div>
+<div class="card">
+  <div class="card-b" id="statusBody"><div class="loading"><div class="spinner"></div>Checking all forms...</div></div>
+</div>
+
+<!-- ELECTRICITY -->
+<div class="section-title"><div class="section-dot" style="background:var(--cyan)"></div>Electricity Consumption</div>
 <div class="grid2">
   <div class="card">
     <div class="card-h">
-      <div class="card-title"><div class="cd" style="background:var(--cyan)"></div>Electricity — Section Wise</div>
-      <div class="card-meta" id="elecMeta">Loading...</div>
+      <div class="card-title"><div class="cd" style="background:var(--cyan)"></div>Main Sections</div>
+      <div class="card-meta" id="elecDate">—</div>
     </div>
     <div class="card-b" id="elecBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
   </div>
   <div class="card">
     <div class="card-h">
-      <div class="card-title"><div class="cd" style="background:var(--accent)"></div>IBH + Press + HT Tempering</div>
-      <div class="card-meta" id="ibhMeta">Induction furnaces</div>
+      <div class="card-title"><div class="cd" style="background:var(--accent)"></div>IBH Furnaces + Presses</div>
+      <div class="card-meta" id="ibhDate">—</div>
     </div>
     <div class="card-b" id="ibhBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
   </div>
 </div>
 
-<div class="grid2">
-  <div class="card">
-    <div class="card-h">
-      <div class="card-title"><div class="cd" style="background:var(--amber)"></div>57F4 Job Work — Reconciliation</div>
-      <div class="card-meta" id="f4Meta">Loading...</div>
-    </div>
-    <div class="card-b" id="f4Body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+<!-- PMS PRODUCTION -->
+<div class="section-title"><div class="section-dot" style="background:var(--green)"></div>PMS — Production, Cutting & Oil</div>
+<div class="card">
+  <div class="card-h">
+    <div class="card-title"><div class="cd" style="background:var(--green)"></div>PMS Forgings Data</div>
+    <div class="card-meta" id="pmsMeta">Loading...</div>
   </div>
-  <div class="card">
-    <div class="card-h">
-      <div class="card-title"><div class="cd" style="background:var(--blue)"></div>Machine Shop — Recent Entries</div>
-      <div class="card-meta" id="cncMeta">Loading...</div>
-    </div>
-    <div class="card-b" id="cncBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-  </div>
+  <div class="card-b" id="pmsBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
 </div>
 
-<div class="card" style="margin-bottom:14px">
+<!-- MACHINE SHOP -->
+<div class="section-title"><div class="section-dot" style="background:var(--blue)"></div>Machine Shop</div>
+<div class="card">
   <div class="card-h">
-    <div class="card-title"><div class="cd" style="background:var(--red)"></div>Data Entry Status — Last 7 Days</div>
-    <div class="card-meta">Missing entries by date</div>
+    <div class="card-title"><div class="cd" style="background:var(--blue)"></div>CNC & Machine Output</div>
+    <div class="card-meta" id="cncMeta">Loading...</div>
   </div>
-  <div class="card-b" id="statusBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  <div class="card-b" id="cncBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
 </div>
+
+<!-- 57F4 -->
+<div class="section-title"><div class="section-dot" style="background:var(--amber)"></div>57F4 Job Work</div>
+<div class="card">
+  <div class="card-h">
+    <div class="card-title"><div class="cd" style="background:var(--amber)"></div>Outstanding with Vendors</div>
+    <div class="card-meta" id="f4Meta">Loading...</div>
+  </div>
+  <div class="card-b" id="f4Body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+</div>
+
 </div>
 
 <script>
-const URLS = {
+// ═══════════════════════════════════════════
+// ALL CONFIRMED SHEET IDs
+// ═══════════════════════════════════════════
+const SHEETS = {
   electricity: 'https://docs.google.com/spreadsheets/d/1nUvf-UWjBSbSWnZTNph-gRUbjzuguGlidpYBKshKUNQ/export?format=csv',
-  f4inward:    'https://docs.google.com/spreadsheets/d/1uX7LqWXwhzA1sLu3TUS-WJ_JLeW1JdOmLeDgNhf2Zfg/export?format=csv',
-  f4outward:   'https://docs.google.com/spreadsheets/d/1yRsAs7zV0HvH63Ah64D0fcttNAhmrRI6AX1MHKvRyxg/export?format=csv',
+  pms:         'https://docs.google.com/spreadsheets/d/1yC-b36rgAxablmdXhngHCEOsmnlgWourep6ctKifXCA/export?format=csv',
   machineShop: 'https://docs.google.com/spreadsheets/d/1txZM9a9_OSG-ZWYaAEBLKj-9M7LYLrFyl0kJkPsTMGI/export?format=csv',
+  f4outward:   'https://docs.google.com/spreadsheets/d/1yRsAs7zV0HvH63Ah64D0fcttNAhmrRI6AX1MHKvRyxg/export?format=csv',
+  f4inward:    'https://docs.google.com/spreadsheets/d/1uX7LqWXwhzA1sLu3TUS-WJ_JLeW1JdOmLeDgNhf2Zfg/export?format=csv',
 };
 
+// ── UTILITIES ─────────────────────────────
 async function fetchCSV(url) {
   const r = await fetch(url);
-  if (!r.ok) throw new Error('HTTP ' + r.status);
+  if (!r.ok) throw new Error('HTTP ' + r.status + ' — sheet not accessible');
   const t = await r.text();
   return t.split('\n').map(line => {
     const cols = []; let cur = '', inQ = false;
     for (const c of line) {
-      if (c === '"') { inQ = !inQ; }
+      if (c === '"') inQ = !inQ;
       else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
       else cur += c;
     }
@@ -174,22 +203,17 @@ async function fetchCSV(url) {
   });
 }
 
-function num(v) { const n = parseFloat(String(v||'').replace(/[^0-9.-]/g,'')); return isNaN(n)?0:n; }
-
-// Parse DD/MM/YYYY to Date
-function parseDate(str) {
-  if (!str) return null;
-  const s = str.trim();
-  // DD/MM/YYYY
-  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
-  // Try direct parse
-  const d = new Date(s);
-  return isNaN(d) ? null : d;
+function num(v) {
+  const n = parseFloat(String(v||'').replace(/[^0-9.-]/g,''));
+  return isNaN(n) ? 0 : n;
 }
 
-function daysBetween(d1, d2) {
-  return Math.round((d2 - d1) / (1000*60*60*24));
+// Parse DD/MM/YYYY HH:MM:SS or DD/MM/YYYY
+function parseDate(str) {
+  if (!str) return null;
+  const m = String(str).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  return null;
 }
 
 function fmtDate(d) {
@@ -198,93 +222,184 @@ function fmtDate(d) {
          String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
 }
 
+function daysDiff(d1, d2) {
+  return Math.round((d2-d1)/(1000*60*60*24));
+}
+
+function isThisMonth(dateStr) {
+  const d = parseDate(dateStr);
+  if (!d) return false;
+  const now = new Date();
+  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+}
+
+// Auto-detect column by header keyword
+function findCol(headers, keywords) {
+  for (const kw of keywords) {
+    const i = headers.findIndex(h => h && h.toLowerCase().includes(kw.toLowerCase()));
+    if (i >= 0) return i;
+  }
+  return -1;
+}
+
 const flags = new Set();
-function addFlag(msg) {
+function addFlag(msg, who) {
   if (flags.has(msg)) return;
   flags.add(msg);
   document.getElementById('flagsBanner').style.display = 'block';
   const d = document.createElement('div');
   d.className = 'flag-item';
-  d.textContent = '⚠ ' + msg;
+  d.innerHTML = '<span>' + msg + '</span>' + (who ? '<span class="flag-who">→ ' + who + '</span>' : '');
   document.getElementById('flagsGrid').appendChild(d);
 }
 
-// ── ELECTRICITY ───────────────────────────────────────
-// CONFIRMED COLUMNS:
+// ── DATA ENTRY STATUS ─────────────────────
+async function loadStatus() {
+  const today = new Date();
+  const last7 = Array.from({length:7}, (_,i) => {
+    const d = new Date(today); d.setDate(d.getDate()-i); return d;
+  });
+
+  const sources = [
+    { name: 'Electricity', url: SHEETS.electricity, dateCol: 1, who: 'Yeole B S (Store)' },
+    { name: 'Machine Shop', url: SHEETS.machineShop, dateCol: 1, who: 'DME / Supervisor', skip: 2 },
+    { name: '57F4 Outward', url: SHEETS.f4outward,   dateCol: 2, who: 'Gate / Store',     filter: r => r[1]&&r[1].includes('Outward') },
+    { name: 'PMS Forgings', url: SHEETS.pms,          dateCol: 1, who: 'Production team' },
+  ];
+
+  const results = await Promise.allSettled(sources.map(s => fetchCSV(s.url)));
+  let missingToday = 0;
+
+  const tableRows = [];
+
+  for (let si = 0; si < sources.length; si++) {
+    const s = sources[si];
+    if (results[si].status === 'rejected') {
+      tableRows.push({ name: s.name, who: s.who, days: last7.map(() => 'error') });
+      continue;
+    }
+
+    let data = results[si].value.slice(s.skip || 1);
+    if (s.filter) data = data.filter(s.filter);
+
+    // Build set of dates with entries
+    const entryDates = new Set();
+    data.forEach(r => {
+      const d = parseDate(r[s.dateCol]);
+      if (d) entryDates.add(fmtDate(d));
+    });
+
+    const dayStatuses = last7.map((d, i) => {
+      const ds = fmtDate(d);
+      const isSun = d.getDay() === 0;
+      const hasEntry = entryDates.has(ds);
+      if (i === 0 && !hasEntry && !isSun) missingToday++;
+      return { ds, hasEntry, isSun };
+    });
+
+    // Flag if missing today or yesterday
+    const todayStr = fmtDate(today);
+    const ydStr = fmtDate(new Date(today.getTime()-86400000));
+    if (!entryDates.has(todayStr) && today.getDay() !== 0) {
+      // Find last entry date
+      const allDates = data.map(r => parseDate(r[s.dateCol])).filter(Boolean).sort((a,b)=>b-a);
+      const lastDate = allDates[0];
+      const gap = lastDate ? daysDiff(lastDate, today) : '?';
+      addFlag(s.name + ': No entry today — last entry was ' + (lastDate ? fmtDate(lastDate) : 'unknown') + ' (' + gap + ' days ago)', s.who);
+    }
+
+    tableRows.push({ name: s.name, who: s.who, days: dayStatuses });
+  }
+
+  document.getElementById('kpi-missing').textContent = missingToday;
+
+  document.getElementById('statusBody').innerHTML =
+    '<div class="tw"><table><thead><tr><th>Form</th><th>Responsible</th>' +
+    last7.map(d => '<th>' + fmtDate(d) + (d.getDay()===0?' ☀':'') + '</th>').join('') +
+    '</tr></thead><tbody>' +
+    tableRows.map(row =>
+      '<tr><td style="font-weight:500">' + row.name +
+      '</td><td style="font-size:10px;color:var(--muted)">' + row.who + '</td>' +
+      row.days.map(d => {
+        if (d === 'error') return '<td><span class="chip chip-amber">Error</span></td>';
+        if (d.isSun) return '<td><span class="chip" style="background:rgba(74,82,104,.2);color:var(--muted)">Sun</span></td>';
+        return '<td><span class="chip ' + (d.hasEntry ? 'chip-green' : 'chip-red') + '">' +
+               (d.hasEntry ? '✓' : '✗') + '</span></td>';
+      }).join('') + '</tr>'
+    ).join('') + '</tbody></table></div>';
+}
+
+// ── ELECTRICITY ───────────────────────────
+// Confirmed columns from actual data:
 // 0=Timestamp, 1=DATE, 2=Operator
 // 3=Main MSEB, 4=3200AM ACB
 // 5=Forge1, 6=Forge2, 7=Grinding, 8=HT, 9=DieShop
-// 10=MachineShop, 11=Compressor75, 12=Compressor120
-// 13=IBH350KW-1, 14=IBH300KW-2, 15=IBH300KW-3
-// 16=IBH600KW-4, 17=IBH150KW-5
-// 18=HT90KW-Temp1, 19=HT90KW-Temp2
-// 20=2500T Press, 21=1300T Press
+// 10=MachineShop, 11=Comp75, 12=Comp120
+// 13=IBH350KW, 14=IBH300KW-2, 15=IBH300KW-3
+// 16=IBH600KW, 17=IBH150KW
+// 18=HT90KW-1, 19=HT90KW-2
+// 20=2500TPress, 21=1300TPress
 async function loadElectricity() {
   try {
-    const rows = await fetchCSV(URLS.electricity);
+    const rows = await fetchCSV(SHEETS.electricity);
     const data = rows.slice(1).filter(r => r[1] && r[1].trim());
-    if (!data.length) throw new Error('No data');
-
     const latest = data[data.length-1];
-    const latestDate = parseDate(latest[1]);
-    const today = new Date();
-    const gapDays = latestDate ? daysBetween(latestDate, today) : 0;
 
-    document.getElementById('elecMeta').textContent = latest[1] + ' (latest entry)';
-    document.getElementById('kpi-elec-date').textContent = latest[1];
+    const mseb = num(latest[3]);
+    document.getElementById('kpi-mseb').textContent = mseb > 0 ? mseb.toLocaleString() : '—';
+    document.getElementById('kpi-mseb-date').textContent = latest[1] || '—';
+    document.getElementById('elecDate').textContent = latest[1];
+    document.getElementById('ibhDate').textContent  = latest[1];
 
-    const totalMSEB = num(latest[3]);
-    const ibhTotal  = [13,14,15,16,17].reduce((s,c) => s+num(latest[c]), 0);
-    const htTotal   = [18,19].reduce((s,c) => s+num(latest[c]), 0);
-    const pressTotal= [20,21].reduce((s,c) => s+num(latest[c]), 0);
-
-    document.getElementById('kpi-elec').textContent = totalMSEB > 0 ? totalMSEB.toLocaleString() : '—';
-    document.getElementById('kpi-ibh').textContent  = ibhTotal  > 0 ? ibhTotal.toLocaleString()  : '—';
-    document.getElementById('kpi-gap').textContent  = gapDays + ' days';
-
-    if (gapDays >= 2) addFlag('Electricity: No entry since ' + latest[1] + ' (' + gapDays + ' days gap)');
-
-    // Main sections
     const mainSecs = [
-      {n:'Forge Shop 1', c:5}, {n:'Forge Shop 2', c:6},
-      {n:'Grinding',     c:7}, {n:'Heat Treatment',c:8},
-      {n:'Die Shop',     c:9}, {n:'Machine Shop',  c:10},
-      {n:'Compressor 1', c:11},{n:'Compressor 2',  c:12},
+      {n:'Forge Shop 1', c:5,  color:'var(--cyan)'},
+      {n:'Forge Shop 2', c:6,  color:'var(--cyan)'},
+      {n:'Grinding',     c:7,  color:'var(--blue)'},
+      {n:'Heat Treatment',c:8, color:'var(--amber)'},
+      {n:'Die Shop',     c:9,  color:'var(--blue)'},
+      {n:'Machine Shop', c:10, color:'var(--green)'},
+      {n:'Compressor 1', c:11, color:'var(--muted)'},
+      {n:'Compressor 2', c:12, color:'var(--muted)'},
     ];
-    const maxE = Math.max(...mainSecs.map(s=>num(latest[s.c])),1);
 
+    const ibhSecs = [
+      {n:'IBH 350KW-1',  c:13},
+      {n:'IBH 300KW-2',  c:14},
+      {n:'IBH 300KW-3',  c:15},
+      {n:'IBH 600KW-4',  c:16},
+      {n:'IBH 150KW-5',  c:17},
+      {n:'HT 90KW Tmp1', c:18},
+      {n:'HT 90KW Tmp2', c:19},
+      {n:'2500T Press',  c:20},
+      {n:'1300T Press',  c:21},
+    ];
+
+    const maxE = Math.max(...mainSecs.map(s=>num(latest[s.c])),1);
     document.getElementById('elecBody').innerHTML =
       '<div class="bar-chart">' +
       mainSecs.map(s => {
         const v = num(latest[s.c]);
-        return '<div class="bar-row"><div class="bar-label">' + s.n +
-          '</div><div class="bar-track"><div class="bar-fill" style="width:' +
-          Math.round(v/maxE*100) + '%;background:var(--cyan)"></div></div>' +
-          '<div class="bar-val c-green">' + (v>0?v.toLocaleString():'0') + '</div></div>';
+        return `<div class="bar-row">
+          <div class="bar-label">${s.n}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxE*100)}%;background:${s.color}"></div></div>
+          <div class="bar-val" style="color:${s.color}">${v>0?v.toLocaleString():'—'}</div>
+        </div>`;
       }).join('') + '</div>' +
-      '<div style="background:var(--s2);border-radius:4px;padding:8px;margin-top:10px;font-family:var(--mono);font-size:11px;display:flex;justify-content:space-between">' +
-      '<span style="color:var(--muted)">Main MSEB Total:</span><span>' + totalMSEB.toLocaleString() + ' units</span></div>';
+      `<div class="info-box">Main MSEB Total: ${mseb.toLocaleString()} units | Date: ${latest[1]} | Op: ${latest[2]||'—'}</div>`;
 
-    // IBH + Press
-    const ibhSecs = [
-      {n:'IBH 350KW-1', c:13},{n:'IBH 300KW-2', c:14},
-      {n:'IBH 300KW-3', c:15},{n:'IBH 600KW-4', c:16},
-      {n:'IBH 150KW-5', c:17},{n:'HT 90KW Tmp1',c:18},
-      {n:'HT 90KW Tmp2',c:19},{n:'2500T Press',  c:20},
-      {n:'1300T Press',  c:21},
-    ];
     const maxI = Math.max(...ibhSecs.map(s=>num(latest[s.c])),1);
-    document.getElementById('ibhMeta').textContent = 'IBH: ' + ibhTotal.toLocaleString() + ' | HT: ' + htTotal.toLocaleString() + ' | Press: ' + pressTotal.toLocaleString();
+    const ibhTotal = ibhSecs.slice(0,5).reduce((s,x)=>s+num(latest[x.c]),0);
     document.getElementById('ibhBody').innerHTML =
       '<div class="bar-chart">' +
       ibhSecs.map(s => {
         const v = num(latest[s.c]);
-        return '<div class="bar-row"><div class="bar-label">' + s.n +
-          '</div><div class="bar-track"><div class="bar-fill" style="width:' +
-          Math.round(v/maxI*100) + '%;background:var(--accent)"></div></div>' +
-          '<div class="bar-val" style="color:var(--accent)">' + (v>0?v.toLocaleString():'0') + '</div></div>';
+        return `<div class="bar-row">
+          <div class="bar-label">${s.n}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxI*100)}%;background:var(--accent)"></div></div>
+          <div class="bar-val c-amber">${v>0?v.toLocaleString():'—'}</div>
+        </div>`;
       }).join('') + '</div>' +
-      '<div style="padding:6px 10px;background:var(--s2);border-radius:4px;margin-top:8px;font-size:10px;color:var(--muted)">Date: ' + latest[1] + ' | Op: ' + (latest[2]||'—') + '</div>';
+      `<div class="info-box">IBH Total: ${ibhTotal.toLocaleString()} units</div>`;
 
   } catch(e) {
     document.getElementById('elecBody').innerHTML = '<div class="err">' + e.message + '</div>';
@@ -292,175 +407,258 @@ async function loadElectricity() {
   }
 }
 
-// ── 57F4 ─────────────────────────────────────────────
-// INWARD CONFIRMED: Col 0=Date, Col 1=Vendor, Col 5=Qty
-// OUTWARD CONFIRMED: Col 2=Date, Col 3=Vendor
-//   Qty pairs: (col5,col6), (col7,col8)...(col23,col24)
-//   BUT col5=VF No, col6=Qty — so qty cols are 6,8,10,12,14,16,18,20,22,24
-async function load57F4() {
+// ── PMS FORGINGS ──────────────────────────
+// Sheet: 1yC-b36rgAxablmdXhngHCEOsmnlgWourep6ctKifXCA
+// Auto-detect columns by header keywords
+async function loadPMS() {
   try {
-    const [iRows, oRows] = await Promise.all([
-      fetchCSV(URLS.f4inward),
-      fetchCSV(URLS.f4outward)
-    ]);
+    const rows = await fetchCSV(SHEETS.pms);
+    if (!rows.length) throw new Error('No data');
 
-    // Inward: skip header row, filter valid
-    const iData = iRows.slice(1).filter(r => r[1] && r[1].trim() && num(r[5]) > 0);
-    // Outward: skip header row, filter Gate Outward only
-    const oData = oRows.slice(1).filter(r => r[1] && r[1].includes('Outward'));
+    // Find header row — first row with multiple non-empty cells
+    let headerRowIdx = 0;
+    for (let i = 0; i < Math.min(rows.length, 5); i++) {
+      if (rows[i].filter(c=>c&&c.trim()).length > 3) { headerRowIdx = i; break; }
+    }
 
-    // Inward total — col 5 confirmed
-    const iQty = iData.reduce((s,r) => s + num(r[5]), 0);
+    const headers = rows[headerRowIdx].map(h => (h||'').toLowerCase().trim());
+    const data = rows.slice(headerRowIdx+1).filter(r => r[1] && r[1].trim());
 
-    // Outward — sum qty cols 6,8,10,12,14,16,18,20,22,24
-    const oQtyCols = [6,8,10,12,14,16,18,20,22,24];
-    const oQty = oData.reduce((s,r) => s + oQtyCols.reduce((qs,c) => qs+num(r[c]), 0), 0);
+    // Auto-detect key columns
+    const dateCol   = findCol(headers, ['date','timestamp']);
+    const okQtyCol  = findCol(headers, ['ok qty','ok pcs','forging qty','good qty','production']);
+    const rejCol    = findCol(headers, ['rejection','reject','rej']);
+    const oilCol    = findCol(headers, ['oil','fo','furnace oil','cbf']);
+    const cutCol    = findCol(headers, ['cut','cutting qty','billet']);
+    const vfCol     = findCol(headers, ['vf no','part no','vf']);
+    const machineCol= findCol(headers, ['machine','press','hammer']);
+    const operCol   = findCol(headers, ['operator','name']);
 
-    const gap = oQty - iQty;
-    const pct = oQty > 0 ? (iQty/oQty*100).toFixed(1) : 0;
+    document.getElementById('pmsMeta').textContent =
+      `${data.length} total entries | Columns detected: date=${dateCol} ok=${okQtyCol} oil=${oilCol} cut=${cutCol}`;
 
-    // Last inward date
-    const lastInDate = iData.length ? iData[iData.length-1][0] : '—';
-    const lastOutDate = oData.length ? oData[oData.length-1][2] : '—';
+    // MTD totals
+    const mtdData = data.filter(r => isThisMonth(r[dateCol]));
+    const totalOK  = mtdData.reduce((s,r) => s+num(r[okQtyCol]), 0);
+    const totalRej = mtdData.reduce((s,r) => s+num(r[rejCol]), 0);
+    const totalOil = mtdData.reduce((s,r) => s+num(r[oilCol]), 0);
+    const totalCut = mtdData.reduce((s,r) => s+num(r[cutCol]), 0);
 
-    document.getElementById('kpi-f4').textContent = gap > 0 ? gap.toLocaleString() + ' pcs' : '—';
-    document.getElementById('f4Meta').textContent = oData.length + ' out entries | ' + iData.length + ' in entries';
+    document.getElementById('kpi-prod').textContent = totalOK > 0 ? totalOK.toLocaleString() : '—';
+    document.getElementById('kpi-oil').textContent  = totalOil > 0 ? totalOil.toLocaleString() : '—';
 
-    if (gap > 0) addFlag('57F4: ' + gap.toLocaleString() + ' pcs with vendors — last return: ' + lastInDate);
+    // Last entry date
+    const allDates = data.map(r=>parseDate(r[dateCol])).filter(Boolean).sort((a,b)=>b-a);
+    const lastDate = allDates[0];
+    const gapDays  = lastDate ? daysDiff(lastDate, new Date()) : 0;
 
-    // Vendor breakdown
-    const vg = {};
-    oData.forEach(r => {
-      const v = r[3] || 'Unknown';
-      vg[v] = (vg[v]||0) + oQtyCols.reduce((s,c) => s+num(r[c]), 0);
-    });
-    iData.forEach(r => {
-      const v = r[1] || 'Unknown';
-      vg[v] = (vg[v]||0) - num(r[5]);
-    });
-    const outstanding = Object.entries(vg).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
-
-    document.getElementById('f4Body').innerHTML =
-      '<div style="margin-bottom:12px">' +
-      '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">' +
-      '<span style="font-size:11px;color:var(--muted)">Total Sent Out</span>' +
-      '<span class="tmono">' + oQty.toLocaleString() + ' pcs</span></div>' +
-      '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">' +
-      '<span style="font-size:11px;color:var(--muted)">Total Returned</span>' +
-      '<span class="tmono c-green">' + iQty.toLocaleString() + ' pcs</span></div>' +
-      '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">' +
-      '<span style="font-size:11px;color:var(--muted)">Still With Vendors</span>' +
-      '<span class="tmono" style="color:var(--amber)">' + gap.toLocaleString() + ' pcs</span></div>' +
-      '<div style="display:flex;justify-content:space-between;padding:6px 0">' +
-      '<span style="font-size:11px;color:var(--muted)">Last Return Date</span>' +
-      '<span class="tmono" style="color:var(--red)">' + lastInDate + '</span></div>' +
-      '<div class="f4-bar"><div class="f4-fill" style="width:' + Math.min(parseFloat(pct),100) + '%"></div></div>' +
-      '<div style="display:flex;justify-content:space-between">' +
-      '<span style="font-size:10px;color:var(--muted)">% returned</span>' +
-      '<span class="tmono" style="font-size:10px">' + pct + '%</span></div></div>' +
-      (outstanding.length ?
-        '<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Vendor Outstanding</div>' +
-        '<div class="tw"><table><thead><tr><th>Vendor</th><th>Pcs with them</th></tr></thead><tbody>' +
-        outstanding.slice(0,8).map(([v,q]) =>
-          '<tr><td style="font-size:11px">' + v +
-          '</td><td class="tmono" style="color:var(--amber)">' + q.toLocaleString() + '</td></tr>'
-        ).join('') + '</tbody></table></div>' : '') +
-      '<div style="margin-top:10px;padding:8px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:4px;font-size:10px;color:var(--amber)">⚠ Last outward: ' + lastOutDate + ' | Reconcile before March 31</div>';
+    // Recent entries table
+    const recent = data.slice(-15).reverse();
+    document.getElementById('pmsBody').innerHTML =
+      `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">
+        <div style="background:var(--s2);border-radius:4px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Production MTD</div>
+          <div style="font-family:var(--mono);font-size:18px;color:var(--green);margin-top:4px">${totalOK.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--muted)">pieces</div>
+        </div>
+        <div style="background:var(--s2);border-radius:4px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Rejection MTD</div>
+          <div style="font-family:var(--mono);font-size:18px;color:var(--red);margin-top:4px">${totalRej.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--muted)">${totalOK+totalRej>0?((totalRej/(totalOK+totalRej))*100).toFixed(1)+'%':'—'}</div>
+        </div>
+        <div style="background:var(--s2);border-radius:4px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Oil MTD</div>
+          <div style="font-family:var(--mono);font-size:18px;color:var(--accent);margin-top:4px">${totalOil>0?totalOil.toLocaleString():'—'}</div>
+          <div style="font-size:10px;color:var(--muted)">litres</div>
+        </div>
+        <div style="background:var(--s2);border-radius:4px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Cut MTD</div>
+          <div style="font-family:var(--mono);font-size:18px;color:var(--blue);margin-top:4px">${totalCut>0?totalCut.toLocaleString():'—'}</div>
+          <div style="font-size:10px;color:var(--muted)">pieces</div>
+        </div>
+      </div>` +
+      (gapDays >= 2 ?
+        `<div style="padding:8px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:4px;font-size:11px;color:var(--red);margin-bottom:10px;font-family:var(--mono)">
+          ⚠ Last PMS entry: ${fmtDate(lastDate)} — ${gapDays} days gap
+        </div>` : '') +
+      '<div class="tw"><table><thead><tr>' +
+      (dateCol>=0?'<th>Date</th>':'') +
+      (vfCol>=0?'<th>VF No</th>':'') +
+      (machineCol>=0?'<th>Machine</th>':'') +
+      (okQtyCol>=0?'<th>OK Qty</th>':'') +
+      (rejCol>=0?'<th>Rejection</th>':'') +
+      (oilCol>=0?'<th>Oil</th>':'') +
+      (cutCol>=0?'<th>Cut Qty</th>':'') +
+      '</tr></thead><tbody>' +
+      recent.map(r =>
+        '<tr>' +
+        (dateCol>=0?`<td class="tmono">${r[dateCol]||'—'}</td>`:'') +
+        (vfCol>=0?`<td class="tmono" style="color:var(--blue)">${r[vfCol]||'—'}</td>`:'') +
+        (machineCol>=0?`<td style="font-size:10px;color:var(--muted)">${r[machineCol]||'—'}</td>`:'') +
+        (okQtyCol>=0?`<td class="tmono c-green">${num(r[okQtyCol])>0?num(r[okQtyCol]).toLocaleString():'—'}</td>`:'') +
+        (rejCol>=0?`<td class="tmono" style="color:${num(r[rejCol])>0?'var(--red)':'var(--muted)'}">${num(r[rejCol])>0?num(r[rejCol]):'—'}</td>`:'') +
+        (oilCol>=0?`<td class="tmono c-amber">${num(r[oilCol])>0?num(r[oilCol]):'—'}</td>`:'') +
+        (cutCol>=0?`<td class="tmono c-blue">${num(r[cutCol])>0?num(r[cutCol]):'—'}</td>`:'') +
+        '</tr>'
+      ).join('') +
+      '</tbody></table></div>' +
+      `<div class="info-box">Showing last 15 entries | MTD = ${new Date().toLocaleString('en-IN',{month:'long',year:'numeric'})}</div>`;
 
   } catch(e) {
-    document.getElementById('f4Body').innerHTML = '<div class="err">' + e.message + '</div>';
+    document.getElementById('pmsBody').innerHTML = '<div class="err">' + e.message + '</div>';
   }
 }
 
-// ── MACHINE SHOP ─────────────────────────────────────
-// Default tab (gid not needed) — Row 0=section headers, Row 1=col headers, data Row 2+
-// Date is col 1 (DD/MM/YYYY format confirmed)
+// ── MACHINE SHOP ──────────────────────────
 async function loadMachineShop() {
   try {
-    const rows = await fetchCSV(URLS.machineShop);
-    // Find data rows — skip rows until we find timestamp pattern
-    let dataStart = 0;
-    for (let i = 0; i < Math.min(rows.length, 5); i++) {
-      if (rows[i][0] && rows[i][0].match(/\d{2}\/\d{2}\/\d{4}/)) { dataStart = i; break; }
-      if (rows[i][1] && rows[i][1].match(/\d{2}\/\d{2}\/\d{4}/)) { dataStart = i; break; }
-    }
+    const rows = await fetchCSV(SHEETS.machineShop);
+    // Row 0 = section names, Row 1 = col headers, data from Row 2
+    const sR = rows[0], cH = rows[1];
+    const data = rows.slice(2).filter(r => r[1] && r[1].match(/\d{2}\/\d{2}\/\d{4}/));
 
-    const data = rows.slice(dataStart).filter(r => r[1] && r[1].match(/\d{2}\/\d{2}\/\d{4}/));
-    if (!data.length) throw new Error('No dated rows found');
+    const allDates = data.map(r=>parseDate(r[1])).filter(Boolean).sort((a,b)=>b-a);
+    const lastDate = allDates[0];
+    const gapDays  = lastDate ? daysDiff(lastDate, new Date()) : 0;
 
-    const lastEntry = data[data.length-1];
-    const lastDate  = parseDate(lastEntry[1]);
-    const today     = new Date();
-    const gapDays   = lastDate ? daysBetween(lastDate, today) : 0;
+    document.getElementById('cncMeta').textContent =
+      `Last entry: ${lastDate ? fmtDate(lastDate) : '—'} ${gapDays>=2?'(⚠ '+gapDays+' days ago)':''}`;
 
-    document.getElementById('cncMeta').textContent = 'Last entry: ' + lastEntry[1] + ' (' + gapDays + ' days ago)';
+    if (gapDays >= 2) addFlag('Machine Shop: No entry since ' + fmtDate(lastDate), 'Supervisor / DME');
 
-    if (gapDays >= 2) addFlag('Machine Shop: No entry since ' + lastEntry[1] + ' (' + gapDays + ' days gap)');
+    // Find machine sections from row 0
+    const machines = [];
+    sR.forEach((h, i) => {
+      if (!h || !h.trim()) return;
+      for (let j=i; j<Math.min(i+8,cH.length); j++) {
+        if (cH[j] && cH[j].toUpperCase().includes('QTY')) {
+          if (!machines.find(m=>m.col===j))
+            machines.push({name: h.replace(/^\d+\)\s*/,''), col: j});
+          break;
+        }
+      }
+    });
 
-    // Show last 10 entries
-    const recent = data.slice(-10).reverse();
+    // Recent 5 days
+    const recentDates = [...new Set(data.map(r=>r[1]).filter(Boolean))].sort().slice(-5);
+    const byDate = {};
+    recentDates.forEach(d => {
+      byDate[d] = {};
+      machines.forEach(m => { byDate[d][m.name] = 0; });
+    });
+    data.filter(r=>recentDates.includes(r[1])).forEach(r => {
+      machines.forEach(m => { byDate[r[1]][m.name] = (byDate[r[1]][m.name]||0) + num(r[m.col]); });
+    });
+
     document.getElementById('cncBody').innerHTML =
-      '<div class="tw"><table><thead><tr><th>Date</th><th>Shift</th><th>Supervisor</th><th>VF No</th><th>QTY</th></tr></thead><tbody>' +
-      recent.map(r =>
-        '<tr><td class="tmono">' + (r[1]||'—') +
-        '</td><td style="font-size:10px;color:var(--muted)">' + (r[2]||'—').replace(/^\d+\)\s*/,'').slice(0,20) +
-        '</td><td style="font-size:11px">' + (r[3]||'—') +
-        '</td><td class="tmono" style="color:var(--blue)">' + (r[5]||'—') +
-        '</td><td class="tmono c-green">' + (r[6]||'—') + '</td></tr>'
-      ).join('') + '</tbody></table></div>' +
-      '<div style="margin-top:8px;padding:8px;background:' + (gapDays>=2?'rgba(248,113,113,.06)':'var(--s2)') +
-      ';border-radius:4px;font-size:11px;font-family:var(--mono);color:' + (gapDays>=2?'var(--red)':'var(--muted)') + '">' +
-      (gapDays >= 2 ? '⚠ ' + gapDays + ' days since last entry. Entries missing for: ' +
-        Array.from({length:gapDays}, (_,i) => { const d=new Date(today); d.setDate(d.getDate()-i); return fmtDate(d); }).slice(0,-1).join(', ') :
-        '✓ Data current') + '</div>';
+      '<div class="tw"><table><thead><tr><th>Machine</th>' +
+      recentDates.map(d=>'<th>'+d+'</th>').join('') +
+      '</tr></thead><tbody>' +
+      machines.filter(m=>recentDates.some(d=>byDate[d][m.name]>0)).map(m =>
+        '<tr><td class="tmono" style="color:var(--blue)">' + m.name + '</td>' +
+        recentDates.map(d => {
+          const v = byDate[d][m.name];
+          return '<td class="tmono" style="color:' + (v>0?'var(--green)':'var(--muted)') + '">' + (v>0?v.toLocaleString():'—') + '</td>';
+        }).join('') + '</tr>'
+      ).join('') +
+      '</tbody></table></div>' +
+      `<div class="info-box">Showing last 5 days | Total machines tracked: ${machines.length}</div>`;
 
   } catch(e) {
     document.getElementById('cncBody').innerHTML = '<div class="err">' + e.message + '</div>';
   }
 }
 
-// ── DATA STATUS ───────────────────────────────────────
-async function loadStatus() {
+// ── 57F4 ──────────────────────────────────
+async function load57F4() {
   try {
-    const [eRows, cRows] = await Promise.all([
-      fetchCSV(URLS.electricity),
-      fetchCSV(URLS.machineShop)
+    const [oRows, iRows] = await Promise.all([
+      fetchCSV(SHEETS.f4outward),
+      fetchCSV(SHEETS.f4inward)
     ]);
 
-    const today = new Date();
-    const last7 = Array.from({length:7}, (_,i) => {
-      const d = new Date(today); d.setDate(d.getDate()-i); return d;
+    // Outward: Gate Outward only, qty cols 6,8,10,12,14,16,18,20,22,24
+    const oData = oRows.slice(1).filter(r => r[1] && r[1].includes('Outward'));
+    const oQtyCols = [6,8,10,12,14,16,18,20,22,24];
+    const oQty = oData.reduce((s,r) => s + oQtyCols.reduce((qs,c) => qs+num(r[c]),0), 0);
+
+    // Inward: col 5 = qty, filter FY 2025-26 (Apr 2025+)
+    const iData = iRows.slice(1).filter(r => {
+      if (!r[5] || !num(r[5])) return false;
+      const d = parseDate(r[0]);
+      if (!d) return false;
+      return (d.getFullYear()===2025 && d.getMonth()>=3) || d.getFullYear()===2026;
     });
+    const iQty = iData.reduce((s,r) => s+num(r[5]), 0);
+    const gap  = oQty - iQty;
+    const pct  = oQty > 0 ? (iQty/oQty*100).toFixed(1) : 0;
 
-    // Get all dates with entries
-    const elecDates = new Set(eRows.slice(1).filter(r=>r[1]).map(r=>r[1].trim()));
-    const cncDates  = new Set(cRows.filter(r=>r[1]&&r[1].match(/\d{2}\/\d{2}\/\d{4}/)).map(r=>r[1].trim()));
+    // Last inward date
+    const iDates = iData.map(r=>parseDate(r[0])).filter(Boolean).sort((a,b)=>b-a);
+    const lastInward = iDates[0];
 
-    document.getElementById('statusBody').innerHTML =
-      '<div class="tw"><table><thead><tr><th>Date</th><th>Electricity</th><th>Machine Shop</th></tr></thead><tbody>' +
-      last7.map(d => {
-        const ds = fmtDate(d);
-        const isWeekend = d.getDay()===0||d.getDay()===6;
-        const eOK = elecDates.has(ds);
-        const cOK = cncDates.has(ds);
-        return '<tr><td class="tmono">' + ds + (isWeekend?' <span style="font-size:9px;color:var(--muted)">(Sun)</span>':'') +
-          '</td><td><span class="chip ' + (eOK?'chip-green':'chip-red') + '">' + (eOK?'✓ Entered':'✗ Missing') + '</span></td>' +
-          '<td><span class="chip ' + (cOK?'chip-green':isWeekend?'chip-amber':'chip-red') + '">' +
-          (cOK?'✓ Entered':isWeekend?'Weekend':'✗ Missing') + '</span></td></tr>';
-      }).join('') + '</tbody></table></div>';
+    // Vendor breakdown
+    const vg = {};
+    oData.forEach(r => {
+      const v = (r[3]||'Unknown').trim();
+      vg[v] = (vg[v]||0) + oQtyCols.reduce((s,c)=>s+num(r[c]),0);
+    });
+    iData.forEach(r => {
+      const v = (r[1]||'Unknown').trim();
+      vg[v] = (vg[v]||0) - num(r[5]);
+    });
+    const outstanding = Object.entries(vg).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+
+    document.getElementById('f4Meta').textContent =
+      `${oData.length} outward | ${iData.length} inward (FY 2526)`;
+
+    if (gap > 0) addFlag('57F4: ' + gap.toLocaleString() + ' pcs with vendors since ' + fmtDate(lastInward), 'Vendor / Store');
+
+    document.getElementById('f4Body').innerHTML =
+      `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+        <div style="background:var(--s2);border-radius:4px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Sent Out</div>
+          <div style="font-family:var(--mono);font-size:18px;margin-top:4px">${oQty.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--muted)">pieces</div>
+        </div>
+        <div style="background:var(--s2);border-radius:4px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Returned</div>
+          <div style="font-family:var(--mono);font-size:18px;color:var(--green);margin-top:4px">${iQty.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--muted)">pieces FY2526</div>
+        </div>
+        <div style="background:var(--s2);border-radius:4px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">With Vendors</div>
+          <div style="font-family:var(--mono);font-size:18px;color:var(--amber);margin-top:4px">${gap>0?gap.toLocaleString():'0'}</div>
+          <div style="font-size:10px;color:var(--muted)">${pct}% returned</div>
+        </div>
+      </div>` +
+      (outstanding.length ?
+        '<div class="tw"><table><thead><tr><th>Vendor</th><th>Pcs outstanding</th></tr></thead><tbody>' +
+        outstanding.slice(0,8).map(([v,q]) =>
+          `<tr><td>${v}</td><td class="tmono" style="color:var(--amber)">${q.toLocaleString()}</td></tr>`
+        ).join('') + '</tbody></table></div>' : '') +
+      `<div class="info-box">Last return: ${lastInward ? fmtDate(lastInward) : '—'} | Reconcile before March 31</div>`;
 
   } catch(e) {
-    document.getElementById('statusBody').innerHTML = '<div class="err">' + e.message + '</div>';
+    document.getElementById('f4Body').innerHTML = '<div class="err">' + e.message + '</div>';
   }
 }
 
+// ── LOAD ALL ──────────────────────────────
 async function loadAll() {
   flags.clear();
   document.getElementById('flagsGrid').innerHTML = '';
   document.getElementById('flagsBanner').style.display = 'none';
   document.getElementById('lastUpdate').textContent =
     'Updated: ' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) + ' IST';
-  await Promise.allSettled([loadElectricity(), load57F4(), loadMachineShop(), loadStatus()]);
+
+  await Promise.allSettled([
+    loadStatus(),
+    loadElectricity(),
+    loadPMS(),
+    loadMachineShop(),
+    load57F4(),
+  ]);
 }
 
 loadAll();
