@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sales & Dispatch">
+<title>Sales & Dispatch — Sanjay</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f9fc;--s1:#ffffff;--s2:#f0f4f8;--border:#e2e8f0;--text:#1a202c;--muted:#718096;--accent:#2b6cb0;--green:#276749;--amber:#b7791f;--red:#c53030;--mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;min-height:100vh;padding-bottom:20px;}
+.hdr{background:var(--accent);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.hdr-name{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.1em;color:white;}
+.hdr-role{font-size:10px;color:rgba(255,255,255,.6);letter-spacing:.08em;}
+.hdr-date{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.6);}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 16px;}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:12px;border-top:3px solid var(--sc,var(--accent));}
+.stat-n{font-family:var(--mono);font-size:22px;font-weight:600;}
+.stat-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;}
+.sec{margin:0 16px 14px;}
+.sec-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.sec-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;}
+.card-row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);}
+.card-row:last-child{border:none;}
+.card-left{}
+.card-customer{font-size:13px;font-weight:600;}
+.card-part{font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono);}
+.card-right{text-align:right;}
+.card-qty{font-family:var(--mono);font-size:13px;font-weight:600;}
+.card-due{font-size:10px;margin-top:2px;}
+.due-ok{color:var(--green);}
+.due-warn{color:var(--amber);}
+.due-late{color:var(--red);}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-family:var(--mono);font-size:10px;font-weight:500;}
+.b-green{background:#c6f6d5;color:var(--green);}
+.b-amber{background:#fefcbf;color:var(--amber);}
+.b-red{background:#fed7d7;color:var(--red);}
+.b-blue{background:#bee3f8;color:var(--accent);}
+.add-bar{display:flex;gap:8px;padding:12px 16px;background:var(--s1);border-top:1px solid var(--border);position:sticky;bottom:0;}
+.add-input{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);font-size:12px;outline:none;}
+.add-btn{background:var(--accent);color:white;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--s1);border-radius:16px 16px 0 0;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;padding:20px;}
+.modal-drag{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.fg label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+.fg input,.fg select,.fg textarea{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);font-size:12px;outline:none;}
+.fg input:focus,.fg select:focus{border-color:var(--accent);}
+.fg select option{background:var(--s1);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn-p{background:var(--accent);color:white;border:none;border-radius:6px;padding:11px;width:100%;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;}
+.btn-s{background:transparent;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:11px;width:100%;font-size:13px;cursor:pointer;margin-top:6px;}
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:white;padding:10px 18px;border-radius:8px;font-size:12px;z-index:300;opacity:0;transition:all .25s;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.empty{text-align:center;padding:30px;color:var(--muted);}
+.dispatch-btn{background:var(--green);color:white;border:none;border-radius:4px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div>
+    <div class="hdr-name">SALES & DISPATCH</div>
+    <div class="hdr-role">Sanjay — Logistics & Sales</div>
+  </div>
+  <div class="hdr-date" id="datePill">—</div>
+</header>
+
+<div class="stats">
+  <div class="stat" style="--sc:var(--red)">
+    <div class="stat-n" id="s-overdue">0</div>
+    <div class="stat-l">Overdue</div>
+  </div>
+  <div class="stat" style="--sc:var(--amber)">
+    <div class="stat-n" id="s-today">0</div>
+    <div class="stat-l">Due Today</div>
+  </div>
+  <div class="stat" style="--sc:var(--green)">
+    <div class="stat-n" id="s-dispatched">0</div>
+    <div class="stat-l">Dispatched</div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-title"><div class="sec-dot" style="background:var(--red)"></div>Overdue Dispatches</div>
+  <div id="overdueList"><div class="empty">Nothing overdue ✅</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title"><div class="sec-dot" style="background:var(--amber)"></div>Due Today</div>
+  <div id="todayList"><div class="empty">Nothing due today</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title"><div class="sec-dot"></div>Open Orders</div>
+  <div id="ordersList"><div class="empty">No open orders — add one below</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title"><div class="sec-dot" style="background:var(--green)"></div>Dispatched This Month</div>
+  <div id="dispatchedList"><div class="empty">No dispatches recorded</div></div>
+</div>
+
+<div class="add-bar">
+  <input class="add-input" id="quickOrder" placeholder="Add order (Customer / Part / Qty)...">
+  <button class="add-btn" onclick="openModal()">+ Add</button>
+</div>
+
+<div class="modal-bg" id="addModal">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px">New Order / Dispatch</div>
+    <div class="fg"><label>Customer *</label><input id="m-customer" placeholder="Customer name"></div>
+    <div class="grid2">
+      <div class="fg"><label>Part / VF Number</label><input id="m-part" placeholder="e.g. VF351"></div>
+      <div class="fg"><label>Quantity *</label><input type="number" id="m-qty" placeholder="0"></div>
+    </div>
+    <div class="grid2">
+      <div class="fg"><label>Unit</label>
+        <select id="m-unit"><option>PCS</option><option>KG</option><option>SET</option><option>NOS</option></select>
+      </div>
+      <div class="fg"><label>Dispatch By *</label><input type="date" id="m-due"></div>
+    </div>
+    <div class="fg"><label>PO / Order Reference</label><input id="m-ref" placeholder="Customer PO number"></div>
+    <div class="fg"><label>Remarks</label><input id="m-remarks" placeholder="Truck, transporter, special instructions..."></div>
+    <button class="btn-p" onclick="saveOrder()">Save Order</button>
+    <button class="btn-s" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+const SHEET_ID = ''; // Wire to Google Sheet
+
+let orders = JSON.parse(localStorage.getItem('sanjay_orders') || '[]');
+
+function init() {
+  const now = new Date();
+  document.getElementById('datePill').textContent =
+    now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+  const d = new Date(); d.setDate(d.getDate()+1);
+  document.getElementById('m-due').value = d.toISOString().split('T')[0];
+  render();
+}
+
+function render() {
+  const today = new Date().toISOString().split('T')[0];
+  const open  = orders.filter(o => o.status !== 'dispatched');
+  const disp  = orders.filter(o => o.status === 'dispatched');
+  const overdue = open.filter(o => o.due < today);
+  const dueToday = open.filter(o => o.due === today);
+  const upcoming = open.filter(o => o.due > today);
+
+  document.getElementById('s-overdue').textContent = overdue.length;
+  document.getElementById('s-today').textContent   = dueToday.length;
+  document.getElementById('s-dispatched').textContent = disp.filter(o => o.dispatchDate?.startsWith(today.slice(0,7))).length;
+
+  renderOrders('overdueList', overdue, true);
+  renderOrders('todayList', dueToday, false);
+  renderOrders('ordersList', upcoming, false);
+  renderDispatched('dispatchedList', disp.slice(-10).reverse());
+}
+
+function renderOrders(id, list, isOverdue) {
+  const el = document.getElementById(id);
+  if (!list.length) { el.innerHTML = '<div class="empty">All clear ✅</div>'; return; }
+  el.innerHTML = `<div class="card">${list.map(o => `
+    <div class="card-row">
+      <div class="card-left">
+        <div class="card-customer">${o.customer}</div>
+        <div class="card-part">${o.part || '—'} ${o.ref ? '· ' + o.ref : ''}</div>
+      </div>
+      <div class="card-right">
+        <div class="card-qty">${o.qty} ${o.unit}</div>
+        <div class="card-due ${isOverdue?'due-late':o.due===new Date().toISOString().split('T')[0]?'due-warn':'due-ok'}">
+          ${fmtDate(o.due)}
+        </div>
+        <div style="margin-top:4px">
+          <button class="dispatch-btn" onclick="markDispatched('${o.id}')">✓ Dispatch</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function renderDispatched(id, list) {
+  const el = document.getElementById(id);
+  if (!list.length) { el.innerHTML = '<div class="empty">No dispatches this month</div>'; return; }
+  el.innerHTML = `<div class="card">${list.map(o => `
+    <div class="card-row">
+      <div class="card-left">
+        <div class="card-customer">${o.customer}</div>
+        <div class="card-part">${o.part || '—'}</div>
+      </div>
+      <div class="card-right">
+        <div class="card-qty">${o.qty} ${o.unit}</div>
+        <div style="margin-top:3px"><span class="badge b-green">Dispatched</span></div>
+        <div class="card-due due-ok" style="margin-top:2px">${fmtDate(o.dispatchDate)}</div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function markDispatched(id) {
+  const o = orders.find(o => o.id === id);
+  if (!o) return;
+  o.status = 'dispatched';
+  o.dispatchDate = new Date().toISOString().split('T')[0];
+  save(); render();
+  toast('✓ Marked as dispatched');
+}
+
+function openModal() { document.getElementById('addModal').classList.add('show'); }
+function closeModal() { document.getElementById('addModal').classList.remove('show'); }
+
+function saveOrder() {
+  const customer = document.getElementById('m-customer').value.trim();
+  const qty      = document.getElementById('m-qty').value;
+  const due      = document.getElementById('m-due').value;
+  if (!customer || !qty || !due) { toast('Fill customer, qty and due date'); return; }
+  orders.unshift({
+    id: 'O'+Date.now(),
+    customer,
+    part:    document.getElementById('m-part').value.trim(),
+    qty,
+    unit:    document.getElementById('m-unit').value,
+    due,
+    ref:     document.getElementById('m-ref').value.trim(),
+    remarks: document.getElementById('m-remarks').value.trim(),
+    status:  'open',
+    created: new Date().toISOString()
+  });
+  save(); render(); closeModal();
+  toast('Order saved');
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const today = new Date().toISOString().split('T')[0];
+  const tom = new Date(); tom.setDate(tom.getDate()+1);
+  if (d === today) return 'Today';
+  if (d === tom.toISOString().split('T')[0]) return 'Tomorrow';
+  return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+
+function save() { localStorage.setItem('sanjay_orders', JSON.stringify(orders)); }
+
+function toast(msg) {
+  const t = document.getElementById('toastEl');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+init();
+</script>
+</body>
+</html>
