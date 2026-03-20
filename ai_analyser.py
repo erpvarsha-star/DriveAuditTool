@@ -47,9 +47,12 @@ ANTHROPIC_API_KEY  = os.environ.get('ANTHROPIC_API_KEY','')
 
 ROWS_TO_READ       = 50
 BATCH_DELAY        = 0.5
-AI_DELAY           = 0.3
+AI_DELAY           = 0.5
 BATCH_SIZE         = 500
 TAB_INIT_ROWS      = 1
+MAX_FILES_PER_RUN  = 100   # Process max 100 files per run to stay under 6h limit
+API_TIMEOUT        = 45    # Seconds before giving up on one file
+SAVE_EVERY         = 1     # Save after EVERY file — never lose progress
 
 ERP_MODULES = [
     'Production / Planning (PPC)',
@@ -202,13 +205,16 @@ def analyse_with_ai(content_text, file_name):
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=API_TIMEOUT) as resp:
             data     = json.loads(resp.read())
             raw_text = data['content'][0]['text'].strip()
             if raw_text.startswith('```'):
                 raw_text = raw_text.split('```')[1]
                 if raw_text.startswith('json'): raw_text = raw_text[4:]
             return json.loads(raw_text.strip())
+    except urllib.error.URLError as e:
+        print(f"  ⏱ Timeout/network error for {file_name}: {e} — skipping")
+        return None
     except Exception as e:
         print(f"  ⚠ AI error for '{file_name}': {e}")
         return {
@@ -338,6 +344,13 @@ def main():
         if name in done_names:
             continue
 
+        # Stop if we've hit max files for this run
+        files_this_run = completed - len(done_names)
+        if files_this_run >= MAX_FILES_PER_RUN:
+            print(f"\n⏸ Reached {MAX_FILES_PER_RUN} files limit for this run.")
+            print(f"   Remaining {total - completed} files will be processed next run.")
+            break
+
         print(f"[{completed+1}/{total}] 🤖 {name[:55]}")
 
         content_rows = get_sheet_content(sheets_svc, fid) if fid else []
@@ -350,6 +363,29 @@ def main():
         )
 
         ai = analyse_with_ai(content_text, name)
+
+        # If AI returned None (timeout/error) — mark as skipped and continue
+        if ai is None:
+            ai = {
+                'erp_module': 'Unknown',
+                'suggested_action': 'REVIEW',
+                'risk_flag': 'NONE',
+                'customer_name': '',
+                'master_data_type': 'Other',
+                'data_quality': 'Unknown',
+                'quality_reason': 'API timeout — needs manual review',
+                'erp_value': '',
+                'erp_field_mapping': '',
+                'duplicate_content': 'NO',
+                'duplicate_note': '',
+                'risk_detail': '',
+                'action_reason': 'Skipped due to API timeout',
+                'owner_signoff': '',
+                'form_chain': '',
+                'suggested_folder': '',
+                'suggested_filename': '',
+            }
+
         ai_results[name] = {'file': f, 'ai': ai}
 
         module  = ai.get('erp_module','')
@@ -362,9 +398,9 @@ def main():
         print(f"   → {module} | {action}{risk_ic}{cust_ic} | {mdt}")
 
         completed += 1
-        if completed % 10 == 0:
-            save_ai_progress(ai_results)
-            print(f"   💾 Saved ({completed}/{total})")
+
+        # Save after EVERY file — never lose progress
+        save_ai_progress(ai_results)
 
         time.sleep(AI_DELAY)
 
