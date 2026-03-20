@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="My Tasks">
+<title>My Tasks — Kajal</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f6f3;--s1:#ffffff;--s2:#f0ede8;--border:#e4e0d8;--text:#1a1815;--muted:#8a8278;--accent:#c84b31;--green:#2d6a4f;--amber:#b5682a;--mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;padding-bottom:20px;}
+
+.hdr{background:var(--text);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+.hdr-name{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.1em;color:white;}
+.hdr-role{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.08em;}
+.hdr-count{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.1);padding:4px 10px;border-radius:12px;}
+
+.greeting{padding:20px 20px 8px;font-size:20px;font-weight:600;letter-spacing:-.01em;}
+.greeting-sub{padding:0 20px 16px;font-size:12px;color:var(--muted);}
+
+/* TASK CARD */
+.task-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;margin:0 16px 10px;overflow:hidden;}
+.task-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+.task-title{font-size:14px;font-weight:600;line-height:1.4;margin-bottom:6px;}
+.task-meta{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:3px;font-family:var(--mono);font-size:10px;font-weight:500;}
+.badge-urgent{background:#fee2e2;color:#991b1b;}
+.badge-high{background:#fef3c7;color:#92400e;}
+.badge-normal{background:#eff6ff;color:#1e40af;}
+.badge-due{background:#f0fdf4;color:#065f46;}
+.badge-overdue{background:#fee2e2;color:#991b1b;}
+
+/* STEPS */
+.steps{padding:10px 16px 14px;}
+.step-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.step-item:last-child{border:none;}
+.step-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;}
+.step-check.done{background:var(--green);border-color:var(--green);}
+.step-content{flex:1;}
+.step-text{font-size:13px;line-height:1.4;}
+.step-text.done{text-decoration:line-through;color:var(--muted);}
+.step-num{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.step-note{margin-top:6px;}
+.step-note input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:12px;color:var(--text);outline:none;font-family:var(--sans);}
+.step-note input:focus{border-color:var(--accent);}
+
+/* COMPLETE BUTTON */
+.complete-btn{display:none;width:calc(100% - 32px);margin:0 16px 10px;padding:13px;background:var(--green);color:white;border:none;border-radius:8px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.02em;}
+.complete-btn.show{display:block;}
+
+/* NOTES */
+.task-notes{padding:8px 16px 14px;font-size:12px;color:var(--muted);background:var(--s2);border-top:1px solid var(--border);}
+
+/* DONE SECTION */
+.done-section{margin:20px 16px 0;}
+.done-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;}
+.done-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;opacity:.6;display:flex;align-items:center;gap:10px;}
+.done-check{width:20px;height:20px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.done-title-text{font-size:13px;text-decoration:line-through;color:var(--muted);}
+.done-time{font-size:10px;font-family:var(--mono);color:var(--muted);margin-left:auto;}
+
+.empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-icon{font-size:32px;margin-bottom:10px;}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:white;padding:10px 18px;border-radius:8px;font-size:12px;z-index:300;opacity:0;transition:all .25s;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div>
+    <div class="hdr-name">MY TASKS</div>
+    <div class="hdr-role">Kajal — Executive Assistant</div>
+  </div>
+  <div class="hdr-count" id="pendingCount">0 pending</div>
+</header>
+
+<div class="greeting" id="greeting">Good morning, Kajal 👋</div>
+<div class="greeting-sub" id="dateStr">—</div>
+
+<div id="taskContainer"></div>
+<div id="completeBtn-container"></div>
+<div id="doneContainer"></div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ── DATA ───────────────────────────────────────────
+// In production: loads from Google Sheet filtered by assignTo = 'kajal'
+// For now: reads from localStorage (shared with Yash app via same sheet)
+
+// Sample tasks to demonstrate Kajal's view
+const SAMPLE_TASKS = [
+  {
+    id: 'T001',
+    title: 'Follow up with Tata Motors on RFQ submitted 15 March',
+    priority: 'high',
+    due: new Date().toISOString().split('T')[0],
+    assignTo: 'kajal',
+    notes: 'Contact: Rajesh Kumar, Purchase Dept. Tel: +91-XXXXXXXXXX',
+    steps: [
+      'Find RFQ number from procurement sheet',
+      'Call Tata Motors purchase contact',
+      'Note their response and expected decision date',
+      'If positive → WhatsApp Sanjay immediately',
+      'If no response → mark for follow-up tomorrow',
+      'Update task status with outcome'
+    ],
+    done: false,
+    stepsDone: [],
+    stepNotes: {}
+  },
+  {
+    id: 'T002',
+    title: 'Collect March salary bank confirmations from Deepak',
+    priority: 'normal',
+    due: new Date(Date.now()+86400000).toISOString().split('T')[0],
+    assignTo: 'kajal',
+    notes: 'Needed before month close. Deepak has the UTR numbers.',
+    steps: [
+      'WhatsApp Deepak: "Please share March salary transfer UTR numbers"',
+      'Wait for his reply (follow up after 2 hours if no response)',
+      'Compile UTR numbers in a table',
+      'Share with Yash on WhatsApp'
+    ],
+    done: false,
+    stepsDone: [],
+    stepNotes: {}
+  }
+];
+
+let tasks = JSON.parse(localStorage.getItem('kajal_tasks') || 'null') || SAMPLE_TASKS;
+
+// ── Init ───────────────────────────────────────────
+function init() {
+  const now = new Date();
+  const ist = new Date(now.toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const h   = ist.getHours();
+  const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').textContent = `${greet}, Kajal 👋`;
+  document.getElementById('dateStr').textContent  =
+    ist.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  render();
+}
+
+// ── Render ─────────────────────────────────────────
+function render() {
+  const today  = new Date().toISOString().split('T')[0];
+  const open   = tasks.filter(t => !t.done && t.assignTo === 'kajal');
+  const done   = tasks.filter(t => t.done && t.assignTo === 'kajal');
+
+  document.getElementById('pendingCount').textContent = `${open.length} pending`;
+
+  const container = document.getElementById('taskContainer');
+  if (!open.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div style="font-weight:600;margin-bottom:4px">All done!</div><div style="font-size:12px">No pending tasks</div></div>';
+  } else {
+    container.innerHTML = open.map(t => renderTask(t, today)).join('');
+  }
+
+  // Done section
+  const doneContainer = document.getElementById('doneContainer');
+  if (done.length) {
+    doneContainer.innerHTML = `
+      <div class="done-section">
+        <div class="done-title">Completed Today</div>
+        ${done.map(t => `
+          <div class="done-card">
+            <div class="done-check"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L4 7L9 1" stroke="white" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <div class="done-title-text">${t.title}</div>
+            <div class="done-time">${t.doneTime || ''}</div>
+          </div>
+        `).join('')}
+      </div>`;
+  }
+}
+
+function renderTask(t, today) {
+  const priMap = {urgent:'badge-urgent',high:'badge-high',normal:'badge-normal'};
+  const dueClass = t.due < today ? 'badge-overdue' : 'badge-due';
+  const dueLabel = fmtDate(t.due);
+  const stepsDone  = t.stepsDone || [];
+  const allDone    = t.steps.length > 0 && stepsDone.length >= t.steps.length;
+
+  return `
+    <div class="task-card" id="card-${t.id}">
+      <div class="task-header">
+        <div class="task-title">${t.title}</div>
+        <div class="task-meta">
+          <span class="badge ${priMap[t.priority]||'badge-normal'}">${t.priority}</span>
+          ${t.due ? `<span class="badge ${dueClass}">Due: ${dueLabel}</span>` : ''}
+          <span class="badge badge-normal">${stepsDone.length}/${t.steps.length} steps</span>
+        </div>
+      </div>
+      ${t.notes ? `<div class="task-notes">📎 ${t.notes}</div>` : ''}
+      <div class="steps">
+        ${t.steps.map((step, i) => {
+          const done = stepsDone.includes(i);
+          const note = (t.stepNotes||{})[i] || '';
+          return `
+            <div class="step-item" id="step-${t.id}-${i}">
+              <div class="step-check ${done?'done':''}" onclick="toggleStep('${t.id}',${i})">
+                ${done?'<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L4 7L9 1" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>':''}
+              </div>
+              <div class="step-content">
+                <div class="step-text ${done?'done':''}">${step}</div>
+                <div class="step-num">Step ${i+1}</div>
+                ${done ? `<div class="step-note"><input placeholder="Add outcome note..." value="${note}" onchange="addNote('${t.id}',${i},this.value)"></div>` : ''}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+      ${allDone ? `<button class="complete-btn show" onclick="completeTask('${t.id}')">✓ Mark Task Complete</button>` : ''}
+    </div>`;
+}
+
+// ── Actions ────────────────────────────────────────
+function toggleStep(taskId, stepIdx) {
+  const t = tasks.find(t => t.id === taskId);
+  if (!t) return;
+  if (!t.stepsDone) t.stepsDone = [];
+  const idx = t.stepsDone.indexOf(stepIdx);
+  if (idx > -1) t.stepsDone.splice(idx, 1);
+  else t.stepsDone.push(stepIdx);
+  save();
+  render();
+  const done = t.stepsDone.length;
+  const total = t.steps.length;
+  toast(`Step ${done}/${total} done`, 'ok');
+}
+
+function addNote(taskId, stepIdx, value) {
+  const t = tasks.find(t => t.id === taskId);
+  if (!t) return;
+  if (!t.stepNotes) t.stepNotes = {};
+  t.stepNotes[stepIdx] = value;
+  save();
+}
+
+function completeTask(taskId) {
+  const t = tasks.find(t => t.id === taskId);
+  if (!t) return;
+  t.done     = true;
+  t.doneTime = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  save();
+  render();
+  toast('✓ Task completed — Yash will be notified', 'ok');
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const today = new Date().toISOString().split('T')[0];
+  const tom   = new Date(); tom.setDate(tom.getDate()+1);
+  if (d === today) return 'Today';
+  if (d === tom.toISOString().split('T')[0]) return 'Tomorrow';
+  return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+
+function save() { localStorage.setItem('kajal_tasks', JSON.stringify(tasks)); }
+
+function toast(msg) {
+  const t = document.getElementById('toastEl');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+init();
+</script>
+</body>
+</html>
