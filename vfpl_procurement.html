@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VFPL Procurement</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0d0f12;
+  --s1:      #141720;
+  --s2:      #1a1e28;
+  --border:  #252a36;
+  --border2: #2f3545;
+  --text:    #e8eaf0;
+  --muted:   #5a6278;
+  --accent:  #e8673d;
+  --green:   #34d399;
+  --amber:   #fbbf24;
+  --blue:    #60a5fa;
+  --red:     #f87171;
+  --mono:    'JetBrains Mono', monospace;
+  --sans:    'Sora', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:13px; min-height:100vh; }
+
+/* HEADER */
+.hdr { background:var(--s1); border-bottom:1px solid var(--border); padding:0 24px; height:52px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.hdr-left { display:flex; align-items:center; gap:16px; }
+.hdr-logo { width:32px; height:32px; background:var(--accent); clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display:flex; align-items:center; justify-content:center; }
+.hdr-logo span { font-family:var(--mono); font-size:10px; font-weight:600; color:#000; }
+.hdr-title { font-family:var(--mono); font-size:13px; font-weight:600; letter-spacing:0.1em; }
+.hdr-sub { font-size:10px; color:var(--muted); letter-spacing:0.06em; }
+.hdr-right { display:flex; align-items:center; gap:10px; }
+.role-pill { display:flex; align-items:center; gap:6px; background:var(--s2); border:1px solid var(--border2); border-radius:20px; padding:4px 12px; }
+.role-pill select { background:transparent; border:none; color:var(--text); font-family:var(--mono); font-size:11px; outline:none; cursor:pointer; }
+.role-pill select option { background:var(--s1); }
+
+/* NAV */
+.nav { background:var(--s1); border-bottom:1px solid var(--border); display:flex; padding:0 24px; overflow-x:auto; }
+.nav-item { padding:13px 18px; font-size:11px; font-weight:500; letter-spacing:0.05em; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; display:flex; align-items:center; gap:6px; transition:all .15s; }
+.nav-item:hover { color:var(--text); }
+.nav-item.active { color:var(--accent); border-bottom-color:var(--accent); }
+.nbadge { background:var(--accent); color:#000; font-size:9px; font-family:var(--mono); padding:1px 5px; border-radius:8px; font-weight:600; }
+
+/* LAYOUT */
+.main { padding:24px; max-width:1400px; margin:0 auto; }
+.section { display:none; }
+.section.active { display:block; }
+
+/* PAGE HEADER */
+.ph { margin-bottom:20px; }
+.ph h1 { font-size:20px; font-weight:600; letter-spacing:-0.02em; }
+.ph p { font-size:12px; color:var(--muted); margin-top:3px; }
+
+/* CARD */
+.card { background:var(--s1); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:16px; }
+.card-h { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-t { font-size:12px; font-weight:600; letter-spacing:0.04em; display:flex; align-items:center; gap:8px; }
+.card-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); }
+.card-meta { font-family:var(--mono); font-size:10px; color:var(--muted); }
+.card-b { padding:18px; }
+
+/* STATS */
+.stats { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:20px; }
+.stat { background:var(--s1); border:1px solid var(--border); border-radius:6px; padding:14px; position:relative; overflow:hidden; }
+.stat::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--sc, var(--accent)); }
+.stat-l { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+.stat-v { font-family:var(--mono); font-size:24px; font-weight:600; line-height:1; }
+.stat-s { font-size:10px; color:var(--muted); margin-top:3px; }
+
+/* FORM */
+.fg { display:flex; flex-direction:column; gap:5px; }
+.fg label { font-size:10px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+.fg input, .fg select, .fg textarea { padding:8px 11px; background:var(--s2); border:1px solid var(--border); border-radius:5px; color:var(--text); font-family:var(--sans); font-size:12px; outline:none; transition:border-color .15s; }
+.fg input:focus, .fg select:focus, .fg textarea:focus { border-color:var(--accent); }
+.fg select option { background:var(--s1); }
+.fg textarea { resize:vertical; min-height:60px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:14px; }
+.full { grid-column:1/-1; }
+
+/* ITEM ROW */
+.item-hdr { display:grid; grid-template-columns:140px 1fr 70px 80px 110px 32px; gap:6px; margin-bottom:4px; }
+.item-hdr span { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; padding:0 2px; }
+.irow { display:grid; grid-template-columns:140px 1fr 70px 80px 110px 32px; gap:6px; margin-bottom:6px; align-items:start; }
+.irow input { padding:7px 10px; background:var(--s2); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:12px; outline:none; width:100%; }
+.irow input:focus { border-color:var(--accent); }
+.irow input[readonly] { background:var(--bg); color:var(--muted); }
+.rm-btn { width:28px; height:32px; background:transparent; border:1px solid var(--border); border-radius:4px; color:var(--muted); cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; margin-top:6px; transition:all .15s; }
+.rm-btn:hover { border-color:var(--red); color:var(--red); background:rgba(248,113,113,.08); }
+
+/* BUTTONS */
+.btn { padding:8px 16px; border-radius:5px; font-family:var(--sans); font-size:12px; font-weight:500; cursor:pointer; border:1px solid transparent; display:inline-flex; align-items:center; gap:5px; transition:all .15s; }
+.btn-p { background:var(--accent); color:#000; }
+.btn-p:hover { background:#f07a50; }
+.btn-s { background:transparent; color:var(--text); border-color:var(--border2); }
+.btn-s:hover { background:var(--s2); }
+.btn-g { background:transparent; color:var(--accent); border:none; font-size:11px; padding:5px 8px; }
+.btn-g:hover { background:rgba(232,103,61,.08); border-radius:4px; }
+.btn-sm { padding:5px 11px; font-size:11px; }
+.btn-row { display:flex; gap:8px; align-items:center; padding-top:4px; }
+
+/* BADGE */
+.b { display:inline-flex; align-items:center; padding:2px 7px; border-radius:3px; font-family:var(--mono); font-size:10px; font-weight:500; white-space:nowrap; }
+.b-draft    { background:rgba(90,98,120,.2);  color:var(--muted); }
+.b-pending  { background:rgba(251,191,36,.15); color:var(--amber); }
+.b-approved { background:rgba(52,211,153,.15); color:var(--green); }
+.b-rejected { background:rgba(248,113,113,.15);color:var(--red); }
+.b-rfq      { background:rgba(96,165,250,.15); color:var(--blue); }
+.b-po       { background:rgba(167,139,250,.15);color:#c4b5fd; }
+.b-grn      { background:rgba(52,211,153,.15); color:var(--green); }
+.b-auto     { background:rgba(52,211,153,.1);  color:var(--green); }
+.b-urgent   { background:rgba(248,113,113,.15);color:var(--red); }
+
+/* TABLE */
+.tw { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+thead th { background:var(--s2); padding:9px 11px; text-align:left; font-size:10px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--border); white-space:nowrap; }
+tbody td { padding:10px 11px; border-bottom:1px solid rgba(37,42,54,.6); vertical-align:middle; }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover td { background:rgba(255,255,255,.02); }
+.tmono { font-family:var(--mono); font-size:11px; }
+.tmuted { color:var(--muted); font-size:11px; }
+
+/* COMPARISON TABLE */
+.cmp-t { width:100%; border-collapse:collapse; }
+.cmp-t th { padding:10px 12px; font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); background:var(--s2); border:1px solid var(--border); }
+.cmp-t td { padding:11px 12px; border:1px solid var(--border); font-size:12px; }
+.cmp-t .l1 { background:rgba(52,211,153,.05); }
+.cmp-t .l1 td { font-weight:500; }
+.rank { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; font-family:var(--mono); font-size:10px; font-weight:700; }
+.r1 { background:var(--green); color:#000; }
+.r2 { background:var(--amber); color:#000; }
+.r3 { background:var(--muted); color:#000; }
+
+/* PO PREVIEW */
+.po-wrap { border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+.po-top { background:var(--text); color:var(--bg); padding:18px 22px; display:grid; grid-template-columns:1fr auto; gap:16px; }
+.po-co { font-size:17px; font-weight:700; }
+.po-gstin { font-size:10px; opacity:.5; margin-top:2px; font-family:var(--mono); }
+.po-num-label { font-size:9px; opacity:.5; text-transform:uppercase; letter-spacing:.08em; text-align:right; }
+.po-num { font-family:var(--mono); font-size:15px; font-weight:600; text-align:right; }
+.po-body { padding:18px 22px; }
+.po-meta { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+.po-meta-item label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+.po-meta-item p { margin-top:2px; font-size:12px; }
+.po-tbl { width:100%; border-collapse:collapse; font-size:11px; }
+.po-tbl th { background:var(--s2); padding:7px 9px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); border:1px solid var(--border); }
+.po-tbl td { padding:9px; border:1px solid var(--border); }
+.po-totals { display:flex; justify-content:flex-end; margin-top:14px; }
+.po-tot-box { width:260px; }
+.po-tot-row { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.po-tot-row.final { font-weight:700; font-size:14px; border-bottom:none; padding-top:8px; }
+.po-sig { margin-top:20px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
+
+/* MODAL */
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:300; display:none; align-items:center; justify-content:center; padding:16px; }
+.modal-bg.show { display:flex; }
+.modal { background:var(--s1); border:1px solid var(--border); border-radius:10px; width:100%; max-width:620px; max-height:90vh; overflow-y:auto; }
+.modal-h { padding:18px 22px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-title { font-size:15px; font-weight:600; }
+.modal-close { width:26px; height:26px; background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:17px; border-radius:4px; display:flex; align-items:center; justify-content:center; }
+.modal-close:hover { background:var(--s2); }
+.modal-b { padding:22px; }
+.modal-f { padding:14px 22px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
+
+/* TOAST */
+.toast { position:fixed; bottom:20px; right:20px; background:var(--s2); border:1px solid var(--border); color:var(--text); padding:11px 16px; border-radius:6px; font-size:12px; z-index:1000; transform:translateY(10px); opacity:0; transition:all .25s; max-width:320px; }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.ok  { border-left:3px solid var(--green); }
+.toast.err { border-left:3px solid var(--red); }
+
+/* RED FLAG */
+.rf-banner { background:rgba(248,113,113,.06); border:1px solid rgba(248,113,113,.2); border-radius:6px; padding:12px 16px; margin-bottom:18px; display:none; }
+.rf-title { font-family:var(--mono); font-size:10px; color:var(--red); letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
+.rf-grid { display:flex; flex-wrap:wrap; gap:6px; }
+.rf-item { padding:4px 9px; background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.15); border-radius:3px; font-size:11px; color:#fca5a5; }
+
+/* EMPTY */
+.empty { text-align:center; padding:40px 20px; color:var(--muted); }
+.empty-icon { font-size:32px; margin-bottom:10px; }
+.empty-t { font-size:14px; font-weight:500; color:var(--text); margin-bottom:4px; }
+
+/* RESPONSIVE */
+@media(max-width:768px) {
+  .stats { grid-template-columns:repeat(2,1fr); }
+  .grid2, .grid3 { grid-template-columns:1fr; }
+  .irow { grid-template-columns:1fr 1fr 60px 32px; }
+  .main { padding:12px; }
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-logo"><span>VF</span></div>
+    <div>
+      <div class="hdr-title">PROCUREMENT</div>
+      <div class="hdr-sub">Varsha Forgings Pvt Ltd</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="role-pill">
+      <span style="font-size:9px;color:var(--muted);letter-spacing:.08em">ROLE</span>
+      <select id="roleSelect" onchange="onRole()">
+        <option value="requester">Requester</option>
+        <option value="fazal">Fazal — L1</option>
+        <option value="deepak">Deepak — L2</option>
+        <option value="yash">Yash — Owner</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<nav class="nav">
+  <div class="nav-item active" onclick="go('dashboard',this)">Dashboard</div>
+  <div class="nav-item" onclick="go('raise',this)">Raise PR</div>
+  <div class="nav-item" onclick="go('approvals',this)">Approvals <span class="nbadge" id="apBadge">0</span></div>
+  <div class="nav-item" onclick="go('rfq',this)">RFQ & Quotes</div>
+  <div class="nav-item" onclick="go('po',this)">Purchase Orders</div>
+  <div class="nav-item" onclick="go('grn',this)">GRN</div>
+</nav>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+<section class="section active" id="sec-dashboard">
+  <div class="ph"><h1>Procurement Dashboard</h1><p>Live status — all procurement activity</p></div>
+  <div class="rf-banner" id="rfBanner">
+    <div class="rf-title">⚠ Red Flags</div>
+    <div class="rf-grid" id="rfGrid"></div>
+  </div>
+  <div class="stats">
+    <div class="stat" style="--sc:var(--amber)"><div class="stat-l">Pending Approval</div><div class="stat-v" id="s-pend">0</div><div class="stat-s">PRs awaiting action</div></div>
+    <div class="stat" style="--sc:var(--blue)"><div class="stat-l">RFQ Open</div><div class="stat-v" id="s-rfq">0</div><div class="stat-s">Awaiting quotes</div></div>
+    <div class="stat" style="--sc:var(--accent)"><div class="stat-l">PO Pending Ack</div><div class="stat-v" id="s-ack">0</div><div class="stat-s">Vendor to confirm</div></div>
+    <div class="stat" style="--sc:var(--green)"><div class="stat-l">GRN Pending</div><div class="stat-v" id="s-grn">0</div><div class="stat-s">Delivery overdue</div></div>
+    <div class="stat" style="--sc:#c4b5fd"><div class="stat-l">MTD PO Value</div><div class="stat-v" id="s-val">—</div><div class="stat-s">This month</div></div>
+  </div>
+  <div class="card">
+    <div class="card-h">
+      <div class="card-t"><div class="card-dot"></div>Recent Activity</div>
+      <button class="btn btn-s btn-sm" onclick="loadDash()">↻</button>
+    </div>
+    <div class="tw">
+      <table><thead><tr><th>Number</th><th>Type</th><th>Item</th><th>Value</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+      <tbody id="dashTbl"><tr><td colspan="7"><div class="empty"><div class="empty-icon">📋</div><div class="empty-t">No activity yet</div><div>Raise a PR to get started</div></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- RAISE PR -->
+<section class="section" id="sec-raise">
+  <div class="ph"><h1>Raise Purchase Requisition</h1><p>Select from item catalog only — no free text entry</p></div>
+  <div class="card">
+    <div class="card-h">
+      <div class="card-t"><div class="card-dot" style="background:var(--blue)"></div>PR Details</div>
+      <span class="b b-draft" id="prNumDisplay">PR# auto-assigned on submit</span>
+    </div>
+    <div class="card-b">
+      <div class="grid3">
+        <div class="fg"><label>Plant *</label>
+          <select id="pr-plant"><option value="">Select plant</option><option value="MKL">Markal (MKL)</option><option value="AUR">Aurangabad (AUR)</option></select></div>
+        <div class="fg"><label>Department *</label>
+          <select id="pr-dept"><option value="">Select dept</option><option>Production</option><option>Maintenance</option><option>Electrical</option><option>Quality</option><option>Store</option><option>Admin</option><option>Safety</option></select></div>
+        <div class="fg"><label>Priority *</label>
+          <select id="pr-prio"><option value="NORMAL">Normal</option><option value="LOW">Low</option><option value="HIGH">High</option><option value="URGENT">🔴 Urgent</option></select></div>
+        <div class="fg"><label>Required By *</label><input type="date" id="pr-date"></div>
+        <div class="fg full"><label>Remarks</label><textarea id="pr-remarks" placeholder="Specific requirements..."></textarea></div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:10px">Line Items</div>
+        <div class="item-hdr"><span>Item Code</span><span>Description</span><span>UOM</span><span>Qty *</span><span>Est. Value</span><span></span></div>
+        <div id="itemRows"></div>
+        <button class="btn btn-g" onclick="addRow()">+ Add Item</button>
+      </div>
+
+      <div id="budgetWarn" style="display:none;padding:10px 14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:5px;margin-bottom:14px;font-size:12px;color:var(--amber)"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="submitPR()">Submit PR</button>
+        <button class="btn btn-s" onclick="toast('Draft saved','ok')">Save Draft</button>
+        <span style="font-size:11px;color:var(--muted)" id="prNote"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- APPROVALS -->
+<section class="section" id="sec-approvals">
+  <div class="ph"><h1>Pending Approvals</h1><p id="apNote">Showing approvals for your role</p></div>
+  <div id="apContent">
+    <div class="empty"><div class="empty-icon">✅</div><div class="empty-t">Nothing pending</div><div>All clear</div></div>
+  </div>
+</section>
+
+<!-- RFQ -->
+<section class="section" id="sec-rfq">
+  <div class="ph"><h1>RFQ & Quote Comparison</h1><p>Auto-ranked L1/L2/L3 by total cost including GST</p></div>
+  <div id="rfqContent">
+    <div class="empty"><div class="empty-icon">📨</div><div class="empty-t">No active RFQs</div><div>RFQs auto-float after PR approval</div></div>
+  </div>
+</section>
+
+<!-- PO -->
+<section class="section" id="sec-po">
+  <div class="ph"><h1>Purchase Orders</h1><p>All issued POs — delivery and payment tracking</p></div>
+  <div class="card">
+    <div class="card-h">
+      <div class="card-t"><div class="card-dot" style="background:#c4b5fd"></div>PO Register</div>
+      <input type="text" placeholder="Search..." style="background:var(--s2);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:5px 10px;font-size:11px;width:160px;outline:none">
+    </div>
+    <div class="tw">
+      <table><thead><tr><th>PO Number</th><th>Date</th><th>Vendor</th><th>Item</th><th>Qty</th><th>Value</th><th>Del. By</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="poTbl"><tr><td colspan="9"><div class="empty"><div class="empty-icon">📄</div><div class="empty-t">No POs yet</div></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- GRN -->
+<section class="section" id="sec-grn">
+  <div class="ph"><h1>Goods Receipt Note</h1><p>Record delivery against open POs only</p></div>
+  <div class="card">
+    <div class="card-h"><div class="card-t"><div class="card-dot" style="background:var(--green)"></div>Raise GRN</div></div>
+    <div class="card-b">
+      <div class="grid2">
+        <div class="fg"><label>Select Open PO *</label><select id="grn-po"><option value="">Select PO...</option></select></div>
+        <div class="fg"><label>Receipt Date *</label><input type="date" id="grn-date"></div>
+        <div class="fg"><label>Challan / DC Number</label><input type="text" id="grn-challan" placeholder="Vendor DC number"></div>
+        <div class="fg"><label>Received By</label><input type="text" id="grn-by" placeholder="Store person name"></div>
+      </div>
+      <div id="grnDetails" style="display:none;background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:14px;margin-bottom:14px">
+        <div class="grid2">
+          <div class="fg"><label>Item</label><input type="text" id="grn-item" readonly></div>
+          <div class="fg"><label>PO Qty</label><input type="text" id="grn-po-qty" readonly></div>
+          <div class="fg"><label>Received Qty *</label><input type="number" id="grn-recv" placeholder="0" oninput="checkGRN()"></div>
+          <div class="fg"><label>Condition</label><select id="grn-cond"><option value="GOOD">Good</option><option value="DAMAGED">Partially Damaged</option><option value="REJECTED">Rejected</option></select></div>
+        </div>
+        <div id="grnWarn" style="display:none;padding:8px;border-radius:4px;font-size:11px;margin-top:8px"></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-p" onclick="submitGRN()">Submit GRN</button></div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /main -->
+
+<!-- PO MODAL -->
+<div class="modal-bg" id="poModal">
+  <div class="modal">
+    <div class="modal-h"><div class="modal-title">Purchase Order</div><button class="modal-close" onclick="closeM('poModal')">✕</button></div>
+    <div class="modal-b"><div id="poPrev"></div></div>
+    <div class="modal-f"><button class="btn btn-s" onclick="closeM('poModal')">Close</button><button class="btn btn-p" onclick="window.print()">Print</button></div>
+  </div>
+</div>
+
+<!-- APPROVAL MODAL -->
+<div class="modal-bg" id="apModal">
+  <div class="modal">
+    <div class="modal-h"><div class="modal-title" id="apModalTitle">Review PR</div><button class="modal-close" onclick="closeM('apModal')">✕</button></div>
+    <div class="modal-b" id="apModalBody"></div>
+    <div class="modal-f">
+      <button class="btn btn-s" onclick="closeM('apModal')">Cancel</button>
+      <button class="btn btn-p" style="background:#dc2626" onclick="rejectPR()">Reject</button>
+      <button class="btn btn-p" onclick="approvePR()">Approve & Float RFQ</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────
+const SHEET_ID   = '1nzgazstgsnPiEKItnwC6T89osxM-LI1wLnFee9p6Sfc';
+const WEBAPP_URL = ''; // Add Apps Script web app URL after deployment
+
+// ── State ────────────────────────────────────────────
+let role = 'requester';
+let currentPR = null;
+let rowCount  = 0;
+const flags   = new Set();
+
+// ── Role ─────────────────────────────────────────────
+function onRole() {
+  role = document.getElementById('roleSelect').value;
+  const notes = {
+    requester: 'Raise PRs and track your own.',
+    fazal:     'Level 1 — approve or reject PRs.',
+    deepak:    'Level 2 — approve PRs, view comparisons, select vendors.',
+    yash:      'Full access — PR + PO approvals + red flags.'
+  };
+  document.getElementById('apNote').textContent = notes[role];
+  loadDash();
+  loadApprovals();
+}
+
+// ── Navigation ───────────────────────────────────────
+function go(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'dashboard') loadDash();
+  if (id === 'approvals') loadApprovals();
+}
+
+// ── Item rows ────────────────────────────────────────
+function addRow() {
+  rowCount++;
+  const id = 'r'+rowCount;
+  const div = document.createElement('div');
+  div.className = 'irow';
+  div.id = id;
+  div.innerHTML = `
+    <input placeholder="e.g. CNSF0005" id="${id}-code" oninput="lookup('${id}')"
+           style="font-family:var(--mono);font-size:11px;text-transform:uppercase">
+    <input placeholder="Auto-filled from catalog" id="${id}-desc" readonly>
+    <input placeholder="NOS" id="${id}-uom" readonly style="font-family:var(--mono)">
+    <input type="number" placeholder="0" id="${id}-qty" oninput="calcVal('${id}')">
+    <input placeholder="Est. value" id="${id}-val" readonly style="font-family:var(--mono);font-size:11px">
+    <button class="rm-btn" onclick="rmRow('${id}')">×</button>
+  `;
+  document.getElementById('itemRows').appendChild(div);
+}
+
+function rmRow(id) { document.getElementById(id)?.remove(); calcTotal(); }
+
+function lookup(id) {
+  // In production: fetch from Item_Master tab in procurement sheet
+  // Placeholder — shows auto-fill concept
+  const code = document.getElementById(id+'-code')?.value.toUpperCase();
+  if (code === 'CNSF0005') {
+    document.getElementById(id+'-desc').value = 'Half Leather Gloves';
+    document.getElementById(id+'-uom').value  = 'NOS';
+  }
+}
+
+function calcVal(id) {
+  const qty = parseFloat(document.getElementById(id+'-qty')?.value) || 0;
+  // Last price would come from item master lookup
+  document.getElementById(id+'-val').value = qty > 0 ? 'Rs —' : '';
+  calcTotal();
+}
+
+function calcTotal() {
+  const warn = document.getElementById('budgetWarn');
+  if (warn) warn.style.display = 'none';
+}
+
+// ── Submit PR ────────────────────────────────────────
+function submitPR() {
+  const plant = document.getElementById('pr-plant').value;
+  const dept  = document.getElementById('pr-dept').value;
+  const date  = document.getElementById('pr-date').value;
+  if (!plant || !dept || !date) { toast('Fill all required fields','err'); return; }
+  const rows = document.querySelectorAll('.irow');
+  if (!rows.length) { toast('Add at least one item','err'); return; }
+
+  const prNum = 'VFPL/PR/2526/' + String(Date.now()).slice(-4);
+  writeSheet('PR_Log', {
+    pr_number: prNum, date: new Date().toISOString().split('T')[0],
+    plant, dept, priority: document.getElementById('pr-prio').value,
+    required_by: date, raised_by: role,
+    remarks: document.getElementById('pr-remarks').value,
+    status: 'PENDING_L1'
+  });
+
+  document.getElementById('prNumDisplay').textContent = prNum;
+  document.getElementById('prNumDisplay').className = 'b b-pending';
+  toast('PR submitted: ' + prNum, 'ok');
+
+  setTimeout(() => {
+    go('dashboard', document.querySelector('.nav-item'));
+  }, 1500);
+}
+
+// ── Dashboard ─────────────────────────────────────────
+function loadDash() {
+  document.getElementById('s-pend').textContent = role === 'requester' ? '—' : '3';
+  document.getElementById('s-rfq').textContent  = '2';
+  document.getElementById('s-ack').textContent  = '1';
+  document.getElementById('s-grn').textContent  = '0';
+  document.getElementById('s-val').textContent  = 'Rs4.2L';
+  document.getElementById('apBadge').textContent = role === 'requester' ? '0' : '3';
+}
+
+// ── Approvals ─────────────────────────────────────────
+function loadApprovals() {
+  const el = document.getElementById('apContent');
+  if (role === 'requester') {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🔒</div><div class="empty-t">No approval access</div><div>Requesters track their own PRs only</div></div>';
+    return;
+  }
+  const level = role === 'fazal' ? 'Level 1 — Manager' : role === 'deepak' ? 'Level 2 — Finance' : 'All Levels';
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-h"><div class="card-t"><div class="card-dot" style="background:var(--amber)"></div>${level} Approvals</div></div>
+      <div class="tw"><table>
+        <thead><tr><th>PR Number</th><th>Plant</th><th>Dept</th><th>Item</th><th>Est. Value</th><th>Priority</th><th>Required By</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="tmono">VFPL/PR/2526/0001</td>
+            <td>MKL</td><td>Maintenance</td>
+            <td>Half Leather Gloves × 500</td>
+            <td class="tmono" style="color:var(--amber)">Rs 22,000</td>
+            <td><span class="b b-pending">NORMAL</span></td>
+            <td class="tmuted">28 Mar 2026</td>
+            <td><button class="btn btn-p btn-sm" onclick="openAp('VFPL/PR/2526/0001')">Review</button></td>
+          </tr>
+        </tbody>
+      </table></div>
+    </div>`;
+}
+
+function openAp(prNum) {
+  currentPR = prNum;
+  document.getElementById('apModalTitle').textContent = 'Review: ' + prNum;
+  document.getElementById('apModalBody').innerHTML = `
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:14px;margin-bottom:14px">
+      <div class="grid2">
+        <div><div class="tmuted">PR Number</div><div class="tmono" style="margin-top:3px">${prNum}</div></div>
+        <div><div class="tmuted">Plant</div><div style="margin-top:3px">Markal (MKL)</div></div>
+        <div><div class="tmuted">Item</div><div style="margin-top:3px">Half Leather Gloves — CNSF0005</div></div>
+        <div><div class="tmuted">Qty / Est. Value</div><div class="tmono" style="margin-top:3px;color:var(--amber)">500 NOS / Rs 22,000</div></div>
+        <div><div class="tmuted">Priority</div><div style="margin-top:3px"><span class="b b-pending">NORMAL</span></div></div>
+        <div><div class="tmuted">Required By</div><div style="margin-top:3px">28 Mar 2026</div></div>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:12px">
+      <label>Reason (mandatory for rejection)</label>
+      <textarea id="apReason" placeholder="Enter reason if rejecting..."></textarea>
+    </div>
+    <div style="padding:8px 12px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:4px;font-size:11px;color:var(--green)">
+      ✓ Below Rs 25,000 — auto-approval eligible. Approving will immediately float RFQ to vendors.
+    </div>`;
+  document.getElementById('apModal').classList.add('show');
+}
+
+function approvePR() {
+  if (!currentPR) return;
+  toast('✓ PR approved — RFQ will be floated to vendors', 'ok');
+  closeM('apModal');
+  loadApprovals();
+}
+
+function rejectPR() {
+  const r = document.getElementById('apReason')?.value || '';
+  if (r.length < 20) { toast('Rejection reason: min 20 characters', 'err'); return; }
+  toast('PR rejected: ' + currentPR, 'err');
+  closeM('apModal');
+  loadApprovals();
+}
+
+// ── PO Preview ────────────────────────────────────────
+function showPO(num) {
+  document.getElementById('poPrev').innerHTML = `
+    <div class="po-wrap">
+      <div class="po-top">
+        <div><div class="po-co">Varsha Forgings Pvt Ltd</div><div class="po-gstin">GSTIN: 27XXXXX1234X1ZX | Markal, Pune 412105</div></div>
+        <div><div class="po-num-label">Purchase Order</div><div class="po-num">${num}</div><div style="font-size:10px;opacity:.4;text-align:right;margin-top:2px">${new Date().toLocaleDateString('en-IN')}</div></div>
+      </div>
+      <div class="po-body">
+        <div class="po-meta">
+          <div class="po-meta-item"><label>Vendor</label><p style="font-weight:600">Sample Vendor Pvt Ltd</p><p style="font-size:10px;color:var(--muted)">GSTIN: 27XXXXX5678X1ZX</p></div>
+          <div class="po-meta-item"><label>Delivery Address</label><p>Varsha Forgings Pvt Ltd, Markal, Pune 412105</p></div>
+          <div class="po-meta-item"><label>Payment Terms</label><p>Net 30 days from GRN</p></div>
+          <div class="po-meta-item"><label>Delivery By</label><p>28 March 2026</p></div>
+        </div>
+        <table class="po-tbl">
+          <thead><tr><th>#</th><th>Code</th><th>Description</th><th>Qty</th><th>UOM</th><th>Rate</th><th>GST%</th><th>Amount</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td style="font-family:var(--mono)">CNSF0005</td><td>Half Leather Gloves</td><td style="font-family:var(--mono)">500</td><td>NOS</td><td style="font-family:var(--mono)">Rs 44.00</td><td>18%</td><td style="font-family:var(--mono)">Rs 22,000</td></tr>
+          </tbody>
+        </table>
+        <div class="po-totals">
+          <div class="po-tot-box">
+            <div class="po-tot-row"><span>Subtotal</span><span style="font-family:var(--mono)">Rs 22,000.00</span></div>
+            <div class="po-tot-row"><span>GST (18%)</span><span style="font-family:var(--mono)">Rs 3,960.00</span></div>
+            <div class="po-tot-row final"><span>Total</span><span style="font-family:var(--mono)">Rs 25,960.00</span></div>
+          </div>
+        </div>
+        <div class="po-sig">
+          <div><div>system-generated PO | purchase@varshaforgings.com</div></div>
+          <div style="text-align:right"><div style="font-weight:600;color:var(--text)">Authorised by</div><div>Yash J Munot — CEO & Director</div></div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('poModal').classList.add('show');
+}
+
+// ── GRN ───────────────────────────────────────────────
+function checkGRN() {
+  const po  = parseFloat(document.getElementById('grn-po-qty')?.value) || 0;
+  const rv  = parseFloat(document.getElementById('grn-recv')?.value)   || 0;
+  const w   = document.getElementById('grnWarn');
+  if (!w) return;
+  if (rv < po && rv > 0) {
+    w.style.display = 'block';
+    w.style.background = 'rgba(251,191,36,.08)';
+    w.style.color = 'var(--amber)';
+    w.textContent = `⚠ Short delivery: ${po-rv} units pending. Partial GRN. PO stays open.`;
+  } else if (rv > po * 1.1) {
+    w.style.display = 'block';
+    w.style.background = 'rgba(248,113,113,.08)';
+    w.style.color = 'var(--red)';
+    w.textContent = '⛔ Over delivery >10%. Cannot accept without Deepak approval.';
+  } else { w.style.display = 'none'; }
+}
+
+function submitGRN() { toast('GRN submitted — inventory updated, Deepak notified', 'ok'); }
+
+// ── Sheet write ───────────────────────────────────────
+function writeSheet(tab, data) {
+  if (!WEBAPP_URL) { console.log('Sheet write (no URL):', tab, data); return; }
+  fetch(WEBAPP_URL, {
+    method: 'POST',
+    body: JSON.stringify({tab, data}),
+    headers: {'Content-Type':'application/json'}
+  }).catch(e => console.error('Write failed:', e));
+}
+
+// ── Utils ─────────────────────────────────────────────
+function closeM(id) { document.getElementById(id).classList.remove('show'); }
+
+function toast(msg, type='ok') {
+  const t = document.getElementById('toastEl');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function addFlag(msg) {
+  if (flags.has(msg)) return;
+  flags.add(msg);
+  const b = document.getElementById('rfBanner');
+  const g = document.getElementById('rfGrid');
+  b.style.display = 'block';
+  const d = document.createElement('div');
+  d.className = 'rf-item';
+  d.textContent = '⚠ ' + msg;
+  g.appendChild(d);
+}
+
+// ── Init ──────────────────────────────────────────────
+addRow();
+loadDash();
+const d = new Date(); d.setDate(d.getDate()+3);
+document.getElementById('pr-date').value = d.toISOString().split('T')[0];
+</script>
+</body>
+</html>
