@@ -4,587 +4,1700 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VFPL Operations Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0c10;--s1:#111318;--s2:#181c24;--border:#1e2330;--text:#e8eaf0;--muted:#4a5268;--accent:#e8673d;--green:#34d399;--amber:#fbbf24;--blue:#60a5fa;--red:#f87171;--cyan:#22d3ee;--mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;}
-.hdr{background:var(--s1);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.hdr-brand{display:flex;align-items:center;gap:10px;}
-.hdr-hex{width:28px;height:28px;background:var(--accent);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:700;color:#000;}
-.hdr-title{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.1em;}
-.hdr-sub{font-size:10px;color:var(--muted);}
-.live-pill{display:flex;align-items:center;gap:5px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);border-radius:12px;padding:3px 10px;font-family:var(--mono);font-size:10px;color:var(--green);}
-.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
-.refresh-btn{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:4px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:var(--mono);}
-.last-update{font-family:var(--mono);font-size:10px;color:var(--muted);}
-.flags{margin:12px 16px 0;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:10px 14px;display:none;}
-.flags-hdr{font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:.1em;margin-bottom:8px;}
-.flags-grid{display:flex;flex-direction:column;gap:4px;}
-.flag-item{padding:5px 10px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:3px;font-size:12px;color:#fca5a5;display:flex;justify-content:space-between;}
-.flag-who{font-family:var(--mono);font-size:10px;color:var(--red);}
-.main{padding:14px 16px;max-width:1400px;margin:0 auto;}
-.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
-.kpi{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:12px 14px;position:relative;overflow:hidden;}
-.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--accent));}
-.kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
-.kpi-value{font-family:var(--mono);font-size:20px;font-weight:600;line-height:1;}
-.kpi-sub{font-size:10px;color:var(--muted);margin-top:3px;}
-.sec-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 8px;display:flex;align-items:center;gap:8px;}
-.sec-dot{width:6px;height:6px;border-radius:50%;}
-.card{background:var(--s1);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:12px;}
-.card-h{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.card-title{font-size:11px;font-weight:600;letter-spacing:.04em;display:flex;align-items:center;gap:7px;}
-.cd{width:5px;height:5px;border-radius:50%;}
-.card-meta{font-family:var(--mono);font-size:10px;color:var(--muted);}
-.card-b{padding:12px 14px;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;}
-.stat-box{background:var(--s2);border-radius:4px;padding:10px;text-align:center;}
-.stat-box-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
-.stat-box-val{font-family:var(--mono);font-size:18px;font-weight:600;margin-top:4px;}
-.stat-box-sub{font-size:10px;color:var(--muted);margin-top:2px;}
-.bar-chart{display:flex;flex-direction:column;gap:6px;}
-.bar-row{display:grid;grid-template-columns:120px 1fr 60px;align-items:center;gap:8px;}
-.bar-label{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
-.bar-fill{height:100%;border-radius:3px;transition:width .8s;}
-.bar-val{font-family:var(--mono);font-size:10px;text-align:right;}
-.tw{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:11px;}
-thead th{background:var(--s2);padding:7px 10px;text-align:left;font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;}
-tbody td{padding:7px 10px;border-bottom:1px solid rgba(30,35,48,.4);vertical-align:middle;}
-tbody tr:last-child td{border:none;}
-.tmono{font-family:var(--mono);font-size:10px;}
-.chip{display:inline-flex;padding:2px 7px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:500;}
-.chip-red{background:rgba(248,113,113,.15);color:#fca5a5;}
-.chip-green{background:rgba(52,211,153,.15);color:#6ee7b7;}
-.chip-amber{background:rgba(251,191,36,.15);color:#fcd34d;}
-.loading{display:flex;align-items:center;justify-content:center;gap:8px;padding:24px;color:var(--muted);font-family:var(--mono);font-size:11px;}
-.spinner{width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.err{padding:10px;color:#fca5a5;font-family:var(--mono);font-size:11px;background:rgba(248,113,113,.06);border-radius:4px;}
-.info-box{padding:8px 10px;background:var(--s2);border-radius:4px;font-size:10px;color:var(--muted);margin-top:8px;font-family:var(--mono);}
-.c-green{color:var(--green);}.c-amber{color:var(--amber);}.c-red{color:var(--red);}.c-blue{color:var(--blue);}
-@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr);}.grid2{grid-template-columns:1fr;}.grid4{grid-template-columns:repeat(2,1fr);}}
+:root {
+  --bg: #080a0f;
+  --s1: #0e1118;
+  --s2: #141820;
+  --s3: #1a2030;
+  --border: #1e2535;
+  --border2: #252d40;
+  --text: #dde2f0;
+  --muted: #4a5570;
+  --muted2: #6b7a9a;
+  --accent: #e8673d;
+  --accent2: #f0845e;
+  --green: #34d399;
+  --green2: #10b981;
+  --amber: #fbbf24;
+  --amber2: #f59e0b;
+  --blue: #60a5fa;
+  --blue2: #3b82f6;
+  --red: #f87171;
+  --red2: #ef4444;
+  --cyan: #22d3ee;
+  --purple: #a78bfa;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Sora', sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; min-height: 100vh; }
+
+/* HEADER */
+.hdr {
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  height: 52px;
+}
+.hdr-brand { display: flex; align-items: center; gap: 12px; }
+.hdr-hex {
+  width: 30px; height: 30px;
+  background: var(--accent);
+  clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 9px; font-weight: 700; color: #000;
+}
+.hdr-title { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: .12em; color: var(--text); }
+.hdr-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.hdr-right { display: flex; align-items: center; gap: 10px; }
+.live-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(52,211,153,.08); border: 1px solid rgba(52,211,153,.2);
+  border-radius: 20px; padding: 4px 10px;
+  font-family: var(--mono); font-size: 10px; color: var(--green);
+}
+.live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+.last-upd { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.refresh-btn {
+  background: transparent; border: 1px solid var(--border2);
+  color: var(--muted2); border-radius: 4px; padding: 5px 12px;
+  font-size: 11px; cursor: pointer; font-family: var(--mono);
+  transition: all .2s;
+}
+.refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* TAB NAV */
+.tab-nav {
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  gap: 0;
+}
+.tab-btn {
+  padding: 12px 24px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--muted);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  transition: all .2s;
+  text-transform: uppercase;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* FLAGS */
+.flags {
+  margin: 12px 16px 0;
+  background: rgba(248,113,113,.04);
+  border: 1px solid rgba(248,113,113,.2);
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: none;
+}
+.flags-hdr { font-family: var(--mono); font-size: 10px; color: var(--red); letter-spacing: .1em; margin-bottom: 8px; }
+.flags-grid { display: flex; flex-direction: column; gap: 4px; }
+.flag-item {
+  padding: 5px 10px;
+  background: rgba(248,113,113,.06);
+  border: 1px solid rgba(248,113,113,.12);
+  border-radius: 3px;
+  font-size: 11px; color: #fca5a5;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.flag-who { font-family: var(--mono); font-size: 10px; color: var(--red); }
+
+/* MAIN LAYOUT */
+.main { padding: 14px 16px; max-width: 1440px; margin: 0 auto; }
+
+/* KPI STRIP */
+.kpi-strip { display: grid; gap: 10px; margin-bottom: 14px; }
+.kpi-strip-5 { grid-template-columns: repeat(5,1fr); }
+.kpi-strip-6 { grid-template-columns: repeat(6,1fr); }
+.kpi-strip-4 { grid-template-columns: repeat(4,1fr); }
+
+.kpi {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--kc, var(--accent));
+}
+.kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.kpi-value { font-family: var(--mono); font-size: 20px; font-weight: 700; line-height: 1; }
+.kpi-sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
+.kpi-delta { font-family: var(--mono); font-size: 10px; margin-top: 4px; }
+.kpi-delta.up { color: var(--green); }
+.kpi-delta.down { color: var(--red); }
+
+/* SECTION TITLE */
+.sec-title {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: var(--muted2);
+  margin: 16px 0 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.sec-line { flex: 1; height: 1px; background: var(--border); }
+
+/* CARDS */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.card-h {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title {
+  font-size: 11px; font-weight: 600; letter-spacing: .04em;
+  display: flex; align-items: center; gap: 7px;
+}
+.cd { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.card-meta { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.card-b { padding: 12px 14px; }
+
+/* GRIDS */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+
+/* STAT BOXES */
+.stat-box {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.stat-box-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.stat-box-val { font-family: var(--mono); font-size: 17px; font-weight: 700; margin-top: 4px; line-height: 1; }
+.stat-box-sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+/* BAR CHART */
+.bar-chart { display: flex; flex-direction: column; gap: 7px; }
+.bar-row { display: grid; grid-template-columns: 130px 1fr 65px; align-items: center; gap: 8px; }
+.bar-row-sm { grid-template-columns: 100px 1fr 55px; }
+.bar-label { font-family: var(--mono); font-size: 10px; color: var(--muted2); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+.bar-val { font-family: var(--mono); font-size: 10px; text-align: right; }
+
+/* TABLE */
+.tw { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
+thead th {
+  background: var(--s2);
+  padding: 7px 10px;
+  text-align: left;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: .05em; text-transform: uppercase;
+  color: var(--muted); border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+tbody td {
+  padding: 7px 10px;
+  border-bottom: 1px solid rgba(30,37,53,.5);
+  vertical-align: middle;
+}
+tbody tr:last-child td { border: none; }
+tbody tr:hover td { background: rgba(255,255,255,.02); }
+.tmono { font-family: var(--mono); font-size: 10px; }
+
+/* CHIPS */
+.chip {
+  display: inline-flex; padding: 2px 7px;
+  border-radius: 3px; font-family: var(--mono); font-size: 9px; font-weight: 600;
+}
+.chip-red { background: rgba(248,113,113,.15); color: #fca5a5; }
+.chip-green { background: rgba(52,211,153,.15); color: #6ee7b7; }
+.chip-amber { background: rgba(251,191,36,.15); color: #fcd34d; }
+.chip-blue { background: rgba(96,165,250,.15); color: #93c5fd; }
+.chip-purple { background: rgba(167,139,250,.15); color: #c4b5fd; }
+
+/* LOADING / ERROR */
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 20px;
+  color: var(--muted); font-family: var(--mono); font-size: 11px;
+}
+.spinner {
+  width: 13px; height: 13px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.err {
+  padding: 10px 12px; color: #fca5a5;
+  font-family: var(--mono); font-size: 11px;
+  background: rgba(248,113,113,.06);
+  border: 1px solid rgba(248,113,113,.15);
+  border-radius: 4px;
+}
+.info-box {
+  padding: 7px 10px; background: var(--s2); border-radius: 4px;
+  font-size: 10px; color: var(--muted); margin-top: 8px;
+  font-family: var(--mono); border: 1px solid var(--border);
+}
+
+/* COLORS */
+.c-green { color: var(--green); }
+.c-amber { color: var(--amber); }
+.c-red { color: var(--red); }
+.c-blue { color: var(--blue); }
+.c-cyan { color: var(--cyan); }
+.c-accent { color: var(--accent); }
+.c-purple { color: var(--purple); }
+.c-muted { color: var(--muted); }
+
+/* PROGRESS RING (for schedule vs actual) */
+.gauge-row { display: flex; align-items: center; gap: 12px; }
+.gauge-bar-wrap { flex: 1; }
+.gauge-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.gauge-track { height: 8px; background: var(--s3); border-radius: 4px; overflow: hidden; }
+.gauge-fill { height: 100%; border-radius: 4px; transition: width 1s; }
+
+/* HIGHLIGHT BOX */
+.hl-box {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.hl-box-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.hl-box-val { font-family: var(--mono); font-size: 22px; font-weight: 700; }
+.hl-box-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+@media(max-width:1100px) {
+  .kpi-strip-5, .kpi-strip-6 { grid-template-columns: repeat(3,1fr); }
+  .grid3 { grid-template-columns: 1fr 1fr; }
+}
+@media(max-width:800px) {
+  .kpi-strip-5, .kpi-strip-6, .kpi-strip-4 { grid-template-columns: repeat(2,1fr); }
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .grid4 { grid-template-columns: repeat(2,1fr); }
+}
 </style>
 </head>
 <body>
+
 <header class="hdr">
   <div class="hdr-brand">
     <div class="hdr-hex">VF</div>
-    <div><div class="hdr-title">VFPL OPERATIONS</div><div class="hdr-sub">Live Dashboard — Varsha Forgings Pvt Ltd</div></div>
+    <div>
+      <div class="hdr-title">VFPL OPERATIONS</div>
+      <div class="hdr-sub">Varsha Forgings Pvt Ltd — Live Dashboard</div>
+    </div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
+  <div class="hdr-right">
     <div class="live-pill"><div class="live-dot"></div>LIVE</div>
-    <div class="last-update" id="lastUpdate">—</div>
+    <div class="last-upd" id="lastUpdate">—</div>
     <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
   </div>
 </header>
 
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('daily')">📅 Daily / Monthly</button>
+  <button class="tab-btn" onclick="switchTab('ytd')">📊 YTD Performance (Apr–Today)</button>
+</nav>
+
+<!-- FLAGS BANNER (shared) -->
 <div class="flags" id="flagsBanner">
-  <div class="flags-hdr">⚠ DATA ENTRY MISSING — Action Required</div>
+  <div class="flags-hdr">⚠ ACTION REQUIRED</div>
   <div class="flags-grid" id="flagsGrid"></div>
 </div>
 
+<!-- ═══════════════════════════════════════════════
+     TAB 1 — DAILY / MONTHLY
+═══════════════════════════════════════════════ -->
+<div class="tab-panel active" id="tab-daily">
 <div class="main">
 
-<div class="kpi-row">
-  <div class="kpi" style="--kc:var(--cyan)"><div class="kpi-label">MSEB Units</div><div class="kpi-value" id="kpi-mseb">—</div><div class="kpi-sub" id="kpi-mseb-date">Latest entry</div></div>
-  <div class="kpi" style="--kc:var(--green)"><div class="kpi-label">Forge Production</div><div class="kpi-value" id="kpi-forge">—</div><div class="kpi-sub">Pcs MTD</div></div>
-  <div class="kpi" style="--kc:var(--blue)"><div class="kpi-label">CNC Output</div><div class="kpi-value" id="kpi-cnc">—</div><div class="kpi-sub">Pcs MTD</div></div>
-  <div class="kpi" style="--kc:var(--accent)"><div class="kpi-label">Oil Consumed</div><div class="kpi-value" id="kpi-oil">—</div><div class="kpi-sub">Litres MTD</div></div>
-  <div class="kpi" style="--kc:var(--red)"><div class="kpi-label">Missing Today</div><div class="kpi-value" id="kpi-missing" style="color:var(--red)">—</div><div class="kpi-sub">Form entries</div></div>
+  <!-- KPI STRIP - TOP -->
+  <div class="kpi-strip kpi-strip-5">
+    <div class="kpi" style="--kc:var(--cyan)">
+      <div class="kpi-label">Electricity Today</div>
+      <div class="kpi-value" id="d-elec-today">—</div>
+      <div class="kpi-sub" id="d-elec-date">Units — latest entry</div>
+    </div>
+    <div class="kpi" style="--kc:var(--green)">
+      <div class="kpi-label">Forge Production MTD</div>
+      <div class="kpi-value" id="d-forge-mtd">—</div>
+      <div class="kpi-sub">Pieces this month</div>
+    </div>
+    <div class="kpi" style="--kc:var(--blue)">
+      <div class="kpi-label">Dispatch MTD</div>
+      <div class="kpi-value" id="d-dispatch-mtd">—</div>
+      <div class="kpi-sub" id="d-dispatch-val">Value this month</div>
+    </div>
+    <div class="kpi" style="--kc:var(--accent)">
+      <div class="kpi-label">Oil Stock</div>
+      <div class="kpi-value" id="d-oil-stock">—</div>
+      <div class="kpi-sub">Litres balance</div>
+    </div>
+    <div class="kpi" style="--kc:var(--red)">
+      <div class="kpi-label">Missing Today</div>
+      <div class="kpi-value" id="d-missing" style="color:var(--red)">—</div>
+      <div class="kpi-sub">Form entries</div>
+    </div>
+  </div>
+
+  <!-- DATA ENTRY STATUS -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--red)"></div>Data Entry Status — Last 7 Days<div class="sec-line"></div></div>
+  <div class="card">
+    <div class="card-b" id="d-status-body"><div class="loading"><div class="spinner"></div>Checking entries...</div></div>
+  </div>
+
+  <!-- ELECTRICITY -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--cyan)"></div>Electricity Consumption<div class="sec-line"></div></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-h">
+        <div class="card-title"><div class="cd" style="background:var(--cyan)"></div>Main Sections — Units</div>
+        <div class="card-meta" id="d-elec-meta">—</div>
+      </div>
+      <div class="card-b" id="d-elec-main"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h">
+        <div class="card-title"><div class="cd" style="background:var(--accent)"></div>IBH Furnaces + Presses</div>
+        <div class="card-meta" id="d-ibh-meta">—</div>
+      </div>
+      <div class="card-b" id="d-ibh-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- ELECTRICITY COST ANALYSIS -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-h">
+      <div class="card-title"><div class="cd" style="background:var(--amber)"></div>Electricity Cost Analysis — MTD</div>
+      <div class="card-meta" id="d-elec-cost-meta">Rate: ₹8.50/unit (avg)</div>
+    </div>
+    <div class="card-b" id="d-elec-cost"><div class="loading"><div class="spinner"></div>Calculating...</div></div>
+  </div>
+
+  <!-- PMS PRODUCTION -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--green)"></div>Production — All Shops (PMS)<div class="sec-line"></div></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--accent)"></div>Forge Shop</div><div class="card-meta" id="d-forge-meta">Loading...</div></div>
+      <div class="card-b" id="d-forge-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--amber)"></div>Cutting Shop</div><div class="card-meta" id="d-cut-meta">Loading...</div></div>
+      <div class="card-b" id="d-cut-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--blue)"></div>Press Shop</div><div class="card-meta" id="d-press-meta">Loading...</div></div>
+      <div class="card-b" id="d-press-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--purple)"></div>HT Shop</div><div class="card-meta" id="d-ht-meta">Loading...</div></div>
+      <div class="card-b" id="d-ht-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- OIL -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--accent)"></div>Oil — Inward & Consumption<div class="sec-line"></div></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--accent)"></div>Oil Inward MTD</div><div class="card-meta" id="d-oilin-meta">—</div></div>
+      <div class="card-b" id="d-oilin-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--amber)"></div>Oil Consumption MTD</div><div class="card-meta" id="d-oilcon-meta">—</div></div>
+      <div class="card-b" id="d-oilcon-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- RM -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--blue)"></div>Raw Material — Inward & Consumption<div class="sec-line"></div></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--blue)"></div>RM Inward MTD</div><div class="card-meta" id="d-rmin-meta">—</div></div>
+      <div class="card-b" id="d-rmin-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--cyan)"></div>RM Consumption MTD</div><div class="card-meta" id="d-rmcon-meta">—</div></div>
+      <div class="card-b" id="d-rmcon-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- DISPATCH -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--green)"></div>Dispatch / Sales MTD<div class="sec-line"></div></div>
+  <div class="card">
+    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--green)"></div>Dispatch Summary — Customer Wise</div><div class="card-meta" id="d-dispatch-meta">—</div></div>
+    <div class="card-b" id="d-dispatch-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
+
+  <!-- 57F4 -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--amber)"></div>57F4 Job Work<div class="sec-line"></div></div>
+  <div class="card">
+    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--amber)"></div>Vendor Reconciliation</div><div class="card-meta" id="d-f4-meta">—</div></div>
+    <div class="card-b" id="d-f4-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
+
+  <!-- MANPOWER -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--purple)"></div>Manpower<div class="sec-line"></div></div>
+  <div class="card">
+    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--purple)"></div>Daily Attendance — Last 7 Days</div><div class="card-meta" id="d-mp-meta">—</div></div>
+    <div class="card-b" id="d-mp-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
+
+</div>
 </div>
 
-<!-- DATA ENTRY STATUS -->
-<div class="sec-title"><div class="sec-dot" style="background:var(--red)"></div>Data Entry Status — Last 7 Days</div>
-<div class="card"><div class="card-b" id="statusBody"><div class="loading"><div class="spinner"></div>Checking...</div></div></div>
+<!-- ═══════════════════════════════════════════════
+     TAB 2 — YTD PERFORMANCE (APR 2025 → TODAY)
+═══════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-ytd">
+<div class="main">
 
-<!-- ELECTRICITY -->
-<div class="sec-title"><div class="sec-dot" style="background:var(--cyan)"></div>Electricity Consumption</div>
-<div class="grid2">
-  <div class="card">
-    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--cyan)"></div>Main Sections</div><div class="card-meta" id="elecDate">—</div></div>
-    <div class="card-b" id="elecBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  <!-- TOP KPIs -->
+  <div class="kpi-strip kpi-strip-6">
+    <div class="kpi" style="--kc:var(--green)">
+      <div class="kpi-label">Total Turnover YTD</div>
+      <div class="kpi-value" id="y-turnover">—</div>
+      <div class="kpi-sub">Apr 2025 → Today</div>
+    </div>
+    <div class="kpi" style="--kc:var(--blue)">
+      <div class="kpi-label">Total Production</div>
+      <div class="kpi-value" id="y-prod-total">—</div>
+      <div class="kpi-sub">Pieces YTD</div>
+    </div>
+    <div class="kpi" style="--kc:var(--cyan)">
+      <div class="kpi-label">RM Consumed</div>
+      <div class="kpi-value" id="y-rm-consumed">—</div>
+      <div class="kpi-sub">Tons YTD</div>
+    </div>
+    <div class="kpi" style="--kc:var(--accent)">
+      <div class="kpi-label">Oil Consumed</div>
+      <div class="kpi-value" id="y-oil-consumed">—</div>
+      <div class="kpi-sub">Litres YTD</div>
+    </div>
+    <div class="kpi" style="--kc:var(--amber)">
+      <div class="kpi-label">Electricity YTD</div>
+      <div class="kpi-value" id="y-elec-total">—</div>
+      <div class="kpi-sub">Total units</div>
+    </div>
+    <div class="kpi" style="--kc:var(--red)">
+      <div class="kpi-label">Overdue AR</div>
+      <div class="kpi-value" id="y-overdue">—</div>
+      <div class="kpi-sub" id="y-overdue-sub">Outstanding</div>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--accent)"></div>IBH Furnaces + Presses</div><div class="card-meta" id="ibhDate">—</div></div>
-    <div class="card-b" id="ibhBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-  </div>
-</div>
 
-<!-- PMS FORGINGS - 4 TABS -->
-<div class="sec-title"><div class="sec-dot" style="background:var(--green)"></div>PMS Forgings — All Shops</div>
-<div class="grid2">
-  <div class="card">
-    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--accent)"></div>Forge Shop</div><div class="card-meta" id="forgeMeta">Loading...</div></div>
-    <div class="card-b" id="forgeBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  <!-- COST ANALYSIS STRIP -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--amber)"></div>Cost Per Ton Analysis — YTD<div class="sec-line"></div></div>
+  <div class="kpi-strip kpi-strip-4">
+    <div class="kpi" style="--kc:var(--blue)">
+      <div class="kpi-label">RM Cost / Ton</div>
+      <div class="kpi-value" id="y-rm-per-ton">—</div>
+      <div class="kpi-sub">₹ per ton consumed</div>
+    </div>
+    <div class="kpi" style="--kc:var(--amber)">
+      <div class="kpi-label">Electricity / Ton</div>
+      <div class="kpi-value" id="y-elec-per-ton">—</div>
+      <div class="kpi-sub">Units per ton forged</div>
+    </div>
+    <div class="kpi" style="--kc:var(--accent)">
+      <div class="kpi-label">Oil / Ton</div>
+      <div class="kpi-value" id="y-oil-per-ton">—</div>
+      <div class="kpi-sub">Litres per ton forged</div>
+    </div>
+    <div class="kpi" style="--kc:var(--green)">
+      <div class="kpi-label">Realisation / Ton</div>
+      <div class="kpi-value" id="y-realisation">—</div>
+      <div class="kpi-sub">₹ per ton dispatched</div>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--amber)"></div>Cutting</div><div class="card-meta" id="cuttingMeta">Loading...</div></div>
-    <div class="card-b" id="cuttingBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-  </div>
-</div>
-<div class="grid2">
-  <div class="card">
-    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--blue)"></div>Press Shop</div><div class="card-meta" id="pressMeta">Loading...</div></div>
-    <div class="card-b" id="pressBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-  </div>
-  <div class="card">
-    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--purple,#c4b5fd)"></div>HT Shop</div><div class="card-meta" id="htMeta">Loading...</div></div>
-    <div class="card-b" id="htBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-  </div>
-</div>
 
-<!-- MACHINE SHOP -->
-<div class="sec-title"><div class="sec-dot" style="background:var(--blue)"></div>Machine Shop PMS</div>
-<div class="card">
-  <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--blue)"></div>CNC & Machine Output — Last 5 Days</div><div class="card-meta" id="cncMeta">Loading...</div></div>
-  <div class="card-b" id="cncBody"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-</div>
+  <!-- PRODUCTION YTD -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--green)"></div>Production — Month-wise YTD<div class="sec-line"></div></div>
+  <div class="card">
+    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--green)"></div>Forge + Press Shop — Monthly Trend</div><div class="card-meta" id="y-prod-meta">—</div></div>
+    <div class="card-b" id="y-prod-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
 
-<!-- 57F4 -->
-<div class="sec-title"><div class="sec-dot" style="background:var(--amber)"></div>57F4 Job Work</div>
-<div class="card">
-  <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--amber)"></div>Vendor Reconciliation</div><div class="card-meta" id="f4Meta">Loading...</div></div>
-  <div class="card-b" id="f4Body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-</div>
+  <!-- RM YTD -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--blue)"></div>Raw Material — YTD<div class="sec-line"></div></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--blue)"></div>RM Inward by Grade — YTD</div><div class="card-meta" id="y-rmin-meta">—</div></div>
+      <div class="card-b" id="y-rmin-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--cyan)"></div>RM Consumption by Grade — YTD</div><div class="card-meta" id="y-rmcon-meta">—</div></div>
+      <div class="card-b" id="y-rmcon-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+  </div>
 
+  <!-- ELECTRICITY YTD -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--cyan)"></div>Electricity — YTD<div class="sec-line"></div></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--cyan)"></div>Monthly Units Trend</div><div class="card-meta" id="y-elec-meta">—</div></div>
+      <div class="card-b" id="y-elec-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--amber)"></div>Elec Cost vs Production — Monthly</div><div class="card-meta">₹8.50/unit est.</div></div>
+      <div class="card-b" id="y-elec-cost-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- OIL YTD -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--accent)"></div>Oil — YTD<div class="sec-line"></div></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--accent)"></div>Oil Inward — Monthly</div><div class="card-meta" id="y-oilin-meta">—</div></div>
+      <div class="card-b" id="y-oilin-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--amber)"></div>Oil Consumption — Monthly</div><div class="card-meta" id="y-oilcon-meta">—</div></div>
+      <div class="card-b" id="y-oilcon-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- DISPATCH YTD -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--green)"></div>Dispatch / Revenue — YTD<div class="sec-line"></div></div>
+  <div class="card">
+    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--green)"></div>Monthly Revenue Trend — Apr 2025 to Mar 2026</div><div class="card-meta" id="y-dispatch-meta">—</div></div>
+    <div class="card-b" id="y-dispatch-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
+
+  <!-- OUTSTANDING -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--red)"></div>Outstanding / Overdue AR<div class="sec-line"></div></div>
+  <div class="card">
+    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--red)"></div>Customer-wise Outstanding</div><div class="card-meta" id="y-ar-meta">—</div></div>
+    <div class="card-b" id="y-ar-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
+
+  <!-- 57F4 YTD -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--amber)"></div>57F4 Job Work — YTD<div class="sec-line"></div></div>
+  <div class="card">
+    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--amber)"></div>Cumulative Vendor Reconciliation</div><div class="card-meta" id="y-f4-meta">—</div></div>
+    <div class="card-b" id="y-f4-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
+
+  <!-- MANPOWER YTD -->
+  <div class="sec-title"><div class="sec-dot" style="background:var(--purple)"></div>Manpower — YTD<div class="sec-line"></div></div>
+  <div class="card">
+    <div class="card-h"><div class="card-title"><div class="cd" style="background:var(--purple)"></div>Monthly Average Headcount</div><div class="card-meta" id="y-mp-meta">—</div></div>
+    <div class="card-b" id="y-mp-body"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
+
+</div>
 </div>
 
 <script>
-const SID = '1yC-b36rgAxablmdXhngHCEOsmnlgWourep6ctKifXCA';
-
-// Tab URLs by name
-function tabURL(sheetId, tabName) {
-  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
-}
-
-const URLS = {
-  electricity:  'https://docs.google.com/spreadsheets/d/1nUvf-UWjBSbSWnZTNph-gRUbjzuguGlidpYBKshKUNQ/export?format=csv',
-  machineShop:  'https://docs.google.com/spreadsheets/d/1txZM9a9_OSG-ZWYaAEBLKj-9M7LYLrFyl0kJkPsTMGI/export?format=csv',
-  f4outward:    'https://docs.google.com/spreadsheets/d/1yRsAs7zV0HvH63Ah64D0fcttNAhmrRI6AX1MHKvRyxg/export?format=csv',
-  f4inward:     'https://docs.google.com/spreadsheets/d/1uX7LqWXwhzA1sLu3TUS-WJ_JLeW1JdOmLeDgNhf2Zfg/export?format=csv',
-  // PMS tabs by name
-  forgeShop:    tabURL(SID, 'Forge Shop'),
-  cutting:      tabURL(SID, 'Cutting Response'),
-  pressShop:    tabURL(SID, 'Press Shop'),
-  htShop:       tabURL(SID, 'HT Shop'),
+// ═══════════════════════════════════════════
+// SHEET IDs — All 15 sources
+// ═══════════════════════════════════════════
+const SHEETS = {
+  electricity:  '1ujJf8T0dqc1DKvUpXWRFQn1YYJXopskyeie18rOZrR8',
+  rmInward:     '1IwjxxXun6Qkb0pql9QZj0WMzcb3_qdapIIdT6Pl6OdY',
+  rmConsumption:'1L9PmD871Youobq5L9jTz4tUkoJtltnVvnud8dt15Mvk',
+  oilInward:    '13V_iNWi6eEvojb2vZsAYVdL8kzy6oKYSMBTtDbxpX5I',
+  oilConsumption:'1nVpCYah9gErhber42_Wencjob3DYq4Sf0wWYpshdmWY',
+  pmsForge:     '1nc1OfJwg1q4W9kVbOuMEDr3CfdHNEwEb3pNFxCby5xg',  // PMS sheet with all shop tabs
+  dispatch:     '142r9GdM2QR6t3pZQzNwDwaNItVckhfocjGEWYG7Gdh4',
+  masterPart:   '1-Y6dr0x1xJVUdqGBGfLyb0mQHcYZlL5Qv8GSnm4yL5Q',
+  outstanding:  '1gnHSHFioxk0-N4vay2Bo-_sp5w4aH828mx1mxkyOZ4E',
+  rejection:    '1cI652JIdpIBcTCXO8psiG5MX1NVc3jugeMCXZPIYTvo',
+  manpower:     '1-sphPy2zPoopfZ5PeLEj1xcBrKMhQl4zYWsFvV_ubu8',
+  f4outward:    '1398x9djM-Jyo0P_lAD2QcI8glDTigY6lGba5YGayrlA',
+  f4inward:     '1xtSAmqUO9saUTTbN_XdggkvCUasMpk8xQdcFmCwWtps',
+  scrap:        '1VHiGYDSRpjj9PqaezOP3JALDnMWYvl-gPx0c_DCnnLg',
+  polymer:      '1CPriVH18MQDKMT4FTVxw5t6_FyemZ7pxlRXfcsi-o9o',
 };
 
-async function fetchCSV(url) {
+// PMS sheet tab names (confirmed from screenshot)
+const PMS_TABS = {
+  forge:    'Forge Shop',
+  cutting:  'Cutting Response',
+  press:    'Press Shop',
+  ht:       'HT Shop',
+};
+
+const ELEC_RATE = 8.50; // ₹ per unit — update if different
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function csvURL(sheetId, tabName) {
+  if (tabName)
+    return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+}
+
+async function fetchCSV(sheetId, tabName) {
+  const url = csvURL(sheetId, tabName);
   const r = await fetch(url);
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const t = await r.text();
+  if (t.includes('<!DOCTYPE') || t.includes('accounts.google.com'))
+    throw new Error('Sheet not public or tab not found');
+  return parseCSV(t);
+}
+
+function parseCSV(t) {
   return t.split('\n').map(line => {
-    const cols=[]; let cur='',inQ=false;
-    for(const c of line){
-      if(c==='"')inQ=!inQ;
-      else if(c===','&&!inQ){cols.push(cur.trim());cur='';}
-      else cur+=c;
+    const cols = []; let cur = '', inQ = false;
+    for (const c of line) {
+      if (c === '"') inQ = !inQ;
+      else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else cur += c;
     }
     cols.push(cur.trim());
     return cols;
-  });
+  }).filter(r => r.some(c => c));
 }
 
-function num(v){const n=parseFloat(String(v||'').replace(/[^0-9.-]/g,''));return isNaN(n)?0:n;}
+function num(v) {
+  const n = parseFloat(String(v || '').replace(/[₹,\s]/g, '').replace(/[^0-9.-]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
 
-function parseDate(s){
-  if(!s)return null;
-  const m=String(s).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+function parseDate(s) {
+  if (!s) return null;
+  const str = String(s).trim();
+  // DD/MM/YYYY
+  let m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  // YYYY-MM-DD
+  m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  // DD-MM-YYYY
+  m = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  // DD/MM/YY
+  m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if (m) return new Date(2000 + +m[3], +m[2]-1, +m[1]);
   return null;
 }
 
-function fmtDate(d){
-  if(!d)return'—';
-  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+function fmtDate(d) {
+  if (!d) return '—';
+  return String(d.getDate()).padStart(2,'0') + '/' +
+         String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
 }
 
-function daysDiff(a,b){return Math.round((b-a)/(864e5));}
-
-function isThisMonth(s){
-  const d=parseDate(s);
-  if(!d)return false;
-  const n=new Date();
-  return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();
+function fmtMonth(d) {
+  if (!d) return '—';
+  return ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'][d.getMonth()] +
+         ' ' + String(d.getFullYear()).slice(2);
 }
 
-// Find column index by keyword
-function findCol(headers,kws){
-  for(const kw of kws){
-    const i=headers.findIndex(h=>h&&h.toLowerCase().includes(kw.toLowerCase()));
-    if(i>=0)return i;
+function daysDiff(a, b) { return Math.round((b - a) / 864e5); }
+
+const today = new Date();
+const thisMonth = today.getMonth();
+const thisYear = today.getFullYear();
+
+function isThisMonth(d) {
+  return d && d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+}
+
+// FY: Apr 2025 → today
+function isFY(d) {
+  if (!d) return false;
+  const fyStart = new Date(2025, 3, 1); // April 1 2025
+  return d >= fyStart && d <= today;
+}
+
+function findCol(headers, keywords) {
+  for (const kw of keywords) {
+    const i = headers.findIndex(h => h && h.toLowerCase().includes(kw.toLowerCase()));
+    if (i >= 0) return i;
   }
   return -1;
 }
 
-const flags=new Set();
-function addFlag(msg,who){
-  if(flags.has(msg))return;
-  flags.add(msg);
-  document.getElementById('flagsBanner').style.display='block';
-  const d=document.createElement('div');
-  d.className='flag-item';
-  d.innerHTML='<span>'+msg+'</span>'+(who?'<span class="flag-who">→ '+who+'</span>':'');
+function crore(v) {
+  if (v >= 1e7) return (v/1e7).toFixed(2) + ' Cr';
+  if (v >= 1e5) return (v/1e5).toFixed(1) + ' L';
+  return v.toLocaleString('en-IN');
+}
+
+function lakh(v) {
+  if (v >= 1e5) return '₹' + (v/1e5).toFixed(1) + 'L';
+  return '₹' + v.toLocaleString('en-IN');
+}
+
+// ═══════════════════════════════════════════
+// FLAGS
+// ═══════════════════════════════════════════
+const flagSet = new Set();
+function addFlag(msg, who) {
+  if (flagSet.has(msg)) return;
+  flagSet.add(msg);
+  document.getElementById('flagsBanner').style.display = 'block';
+  const d = document.createElement('div');
+  d.className = 'flag-item';
+  d.innerHTML = '<span>' + msg + '</span>' + (who ? '<span class="flag-who">→ ' + who + '</span>' : '');
   document.getElementById('flagsGrid').appendChild(d);
 }
 
-// ── PMS TAB LOADER ───────────────────────
-// Each PMS tab: Timestamp(A), Date(B), Shift(C), Supervisor(D)
-// Then section data columns
-async function loadPMSTab(url, elId, metaId, tabName, color) {
-  try {
-    const rows = await fetchCSV(url);
-    if (!rows || rows.length < 2) throw new Error('No data in ' + tabName);
+// ═══════════════════════════════════════════
+// MONTH GROUPING
+// ═══════════════════════════════════════════
+const FY_MONTHS = [
+  {m:3, y:2025},{m:4,y:2025},{m:5,y:2025},{m:6,y:2025},{m:7,y:2025},{m:8,y:2025},
+  {m:9,y:2025},{m:10,y:2025},{m:11,y:2025},{m:0,y:2026},{m:1,y:2026},{m:2,y:2026}
+];
 
-    // Find header row — row with 'date' or 'timestamp'
+function monthKey(d) { return d.getFullYear() + '-' + String(d.getMonth()).padStart(2,'0'); }
+function mkLabel(m,y) {
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m] + ' ' + String(y).slice(2);
+}
+
+function monthBarChart(dataObj, color, unit='') {
+  const entries = FY_MONTHS.map(({m,y}) => ({
+    label: mkLabel(m,y),
+    key: y+'-'+String(m).padStart(2,'0'),
+    val: 0
+  }));
+  Object.entries(dataObj).forEach(([k,v]) => {
+    const e = entries.find(x=>x.key===k);
+    if(e) e.val = v;
+  });
+  const active = entries.filter(e=>e.val>0);
+  if(!active.length) return '<div style="padding:12px;text-align:center;color:var(--muted);font-size:11px">No data found for this period</div>';
+  const maxV = Math.max(...active.map(e=>e.val),1);
+  return '<div class="bar-chart">' + active.map(e=>
+    `<div class="bar-row">
+      <div class="bar-label">${e.label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(e.val/maxV*100)}%;background:${color}"></div></div>
+      <div class="bar-val" style="color:${color}">${e.val.toLocaleString('en-IN')}${unit}</div>
+    </div>`
+  ).join('') + '</div>';
+}
+
+// ═══════════════════════════════════════════
+// ELECTRICITY
+// ═══════════════════════════════════════════
+let elecDataCache = null;
+
+async function loadElectricity() {
+  try {
+    const rows = await fetchCSV(SHEETS.electricity);
+    // Find header row
     let hIdx = 0;
-    for(let i=0;i<Math.min(rows.length,5);i++){
-      if(rows[i].join('').toLowerCase().includes('date')||
-         rows[i].join('').toLowerCase().includes('timestamp')){hIdx=i;break;}
+    for (let i = 0; i < Math.min(5, rows.length); i++) {
+      if (rows[i].join('').toLowerCase().includes('date')) { hIdx = i; break; }
+    }
+    const headers = rows[hIdx].map(h => (h||'').toLowerCase().trim());
+    const data = rows.slice(hIdx+1).filter(r => parseDate(r[findCol(headers,['date'])]));
+    elecDataCache = { headers, data, hIdx, raw: rows };
+
+    const dateCol = findCol(headers, ['date']);
+    const latest = data[data.length-1];
+    const latestDate = parseDate(latest[dateCol]);
+
+    // MSEB main (col 3 typically — detect by name)
+    const msebCol = findCol(headers, ['mseb','main meter','total']);
+    const msebVal = msebCol >= 0 ? num(latest[msebCol]) : num(latest[3]);
+
+    document.getElementById('d-elec-today').textContent = msebVal > 0 ? msebVal.toLocaleString() : '—';
+    document.getElementById('d-elec-date').textContent = 'Units — ' + fmtDate(latestDate);
+    document.getElementById('d-elec-meta').textContent = fmtDate(latestDate);
+    document.getElementById('d-ibh-meta').textContent = fmtDate(latestDate);
+
+    // Gap check
+    const gap = latestDate ? daysDiff(latestDate, today) : 99;
+    if (gap >= 2) addFlag('Electricity: No entry since ' + fmtDate(latestDate) + ' (' + gap + ' days)', 'Yeole B S / Store');
+
+    // Main sections — cols 5–12 (after date, operator, meter columns)
+    // We'll auto-detect numeric columns between col 4 and col 13
+    const mainSecs = [];
+    const ibhSecs = [];
+    rows[hIdx].forEach((h, i) => {
+      if (!h || i < 3) return;
+      const hl = h.toLowerCase();
+      if (hl.includes('ibh') || hl.includes('furnace')) ibhSecs.push({n: h, c: i});
+      else if (hl.includes('press') || hl.includes('ht') || hl.includes('heat')) ibhSecs.push({n: h, c: i});
+      else if (hl.includes('shop') || hl.includes('grind') || hl.includes('comp') ||
+               hl.includes('machine') || hl.includes('die') || hl.includes('forge') ||
+               hl.includes('compress')) mainSecs.push({n: h, c: i});
+    });
+
+    // Fallback: use raw column positions from known structure
+    if (mainSecs.length === 0) {
+      [
+        {n:'Forge Shop 1',c:5},{n:'Forge Shop 2',c:6},{n:'Grinding',c:7},
+        {n:'Heat Treatment',c:8},{n:'Die Shop',c:9},{n:'Machine Shop',c:10},
+        {n:'Compressor 1',c:11},{n:'Compressor 2',c:12}
+      ].forEach(s => mainSecs.push(s));
+    }
+    if (ibhSecs.length === 0) {
+      [
+        {n:'IBH 350KW-1',c:13},{n:'IBH 300KW-2',c:14},{n:'IBH 300KW-3',c:15},
+        {n:'IBH 600KW-4',c:16},{n:'IBH 150KW-5',c:17},
+        {n:'HT 90KW Tmp1',c:18},{n:'HT 90KW Tmp2',c:19},
+        {n:'2500T Press',c:20},{n:'1300T Press',c:21}
+      ].forEach(s => ibhSecs.push(s));
     }
 
-    const headers = rows[hIdx].map(h=>(h||'').toLowerCase().trim());
-    const data = rows.slice(hIdx+1).filter(r=>r[1]&&r[1].trim()&&r[1].match&&r[1].match(/\d/));
+    const maxM = Math.max(...mainSecs.map(s => num(latest[s.c])), 1);
+    document.getElementById('d-elec-main').innerHTML =
+      '<div class="bar-chart">' +
+      mainSecs.map(s => {
+        const v = num(latest[s.c]);
+        return `<div class="bar-row">
+          <div class="bar-label">${s.n}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxM*100)}%;background:var(--cyan)"></div></div>
+          <div class="bar-val c-cyan">${v>0?v.toLocaleString('en-IN'):'—'}</div>
+        </div>`;
+      }).join('') + '</div>' +
+      `<div class="info-box">MSEB Main: ${msebVal.toLocaleString()} units | Date: ${fmtDate(latestDate)}</div>`;
 
-    const dateCol = findCol(headers,['date']);
-    const shiftCol= findCol(headers,['shift']);
-    const supCol  = findCol(headers,['supervisor','name']);
+    const maxI = Math.max(...ibhSecs.map(s => num(latest[s.c])), 1);
+    const ibhTot = ibhSecs.slice(0,5).reduce((s,x) => s + num(latest[x.c]), 0);
+    document.getElementById('d-ibh-body').innerHTML =
+      '<div class="bar-chart">' +
+      ibhSecs.map(s => {
+        const v = num(latest[s.c]);
+        return `<div class="bar-row">
+          <div class="bar-label">${s.n}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxI*100)}%;background:var(--accent)"></div></div>
+          <div class="bar-val c-amber">${v>0?v.toLocaleString('en-IN'):'—'}</div>
+        </div>`;
+      }).join('') + '</div>' +
+      `<div class="info-box">IBH Subtotal: ${ibhTot.toLocaleString()} units</div>`;
 
-    // Find all numeric columns (production/qty columns)
+    // ELECTRICITY COST ANALYSIS — MTD
+    const mtdData = data.filter(r => isThisMonth(parseDate(r[dateCol])));
+    const mtdTotal = mtdData.reduce((s,r) => s + num(r[msebCol >= 0 ? msebCol : 3]), 0);
+    const mtdCost = mtdTotal * ELEC_RATE;
+
+    document.getElementById('d-elec-cost').innerHTML =
+      `<div class="grid4">
+        <div class="stat-box">
+          <div class="stat-box-label">MTD Units</div>
+          <div class="stat-box-val c-cyan">${mtdTotal.toLocaleString('en-IN')}</div>
+          <div class="stat-box-sub">units consumed</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">MTD Elec Cost</div>
+          <div class="stat-box-val c-amber">₹${(mtdCost/1e5).toFixed(1)}L</div>
+          <div class="stat-box-sub">@ ₹${ELEC_RATE}/unit</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Daily Avg Units</div>
+          <div class="stat-box-val">${mtdData.length > 0 ? Math.round(mtdTotal/mtdData.length).toLocaleString('en-IN') : '—'}</div>
+          <div class="stat-box-sub">${mtdData.length} days recorded</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Daily Avg Cost</div>
+          <div class="stat-box-val c-amber">${mtdData.length > 0 ? lakh(Math.round(mtdCost/mtdData.length)) : '—'}</div>
+          <div class="stat-box-sub">per working day</div>
+        </div>
+      </div>
+      <div class="info-box">⚡ Electricity cost per ton calculated in YTD tab after production data loads</div>`;
+
+    // YTD ELECTRICITY
+    const ytdByMonth = {};
+    data.filter(r => isFY(parseDate(r[dateCol]))).forEach(r => {
+      const d = parseDate(r[dateCol]);
+      const k = monthKey(d);
+      ytdByMonth[k] = (ytdByMonth[k]||0) + num(r[msebCol >= 0 ? msebCol : 3]);
+    });
+    const ytdTotal = Object.values(ytdByMonth).reduce((s,v) => s+v, 0);
+    document.getElementById('y-elec-total').textContent = (ytdTotal/1000).toFixed(0) + 'K';
+    document.getElementById('y-elec-body').innerHTML = monthBarChart(ytdByMonth, 'var(--cyan)', ' u');
+    document.getElementById('y-elec-meta').textContent = ytdTotal.toLocaleString() + ' units YTD';
+
+    // Cost per month
+    const costByMonth = {};
+    Object.entries(ytdByMonth).forEach(([k,v]) => { costByMonth[k] = Math.round(v * ELEC_RATE); });
+    document.getElementById('y-elec-cost-body').innerHTML = monthBarChart(costByMonth, 'var(--amber)');
+
+    return { ytdByMonth, ytdTotal };
+
+  } catch(e) {
+    document.getElementById('d-elec-main').innerHTML = '<div class="err">Electricity: ' + e.message + '</div>';
+    document.getElementById('d-ibh-body').innerHTML = '<div class="err">' + e.message + '</div>';
+    document.getElementById('d-elec-cost').innerHTML = '<div class="err">' + e.message + '</div>';
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════
+// PMS TABS (FORGE, CUTTING, PRESS, HT)
+// ═══════════════════════════════════════════
+async function loadPMSTab(tabName, bodyId, metaId, color) {
+  try {
+    const rows = await fetchCSV(SHEETS.pmsForge, tabName);
+    let hIdx = 0;
+    for (let i = 0; i < Math.min(5, rows.length); i++) {
+      if (rows[i].join('').toLowerCase().match(/date|timestamp/)) { hIdx = i; break; }
+    }
+    const headers = rows[hIdx].map(h => (h||'').toLowerCase().trim());
+    const dateCol = findCol(headers, ['date']);
+    const shiftCol = findCol(headers, ['shift']);
+    const supCol = findCol(headers, ['supervisor','name','operator']);
+
+    const data = rows.slice(hIdx+1).filter(r => {
+      const d = parseDate(r[dateCol]);
+      return d && d.getFullYear() >= 2025;
+    });
+
     const numCols = [];
-    headers.forEach((h,i)=>{
-      if(i>3 && h && !h.includes('remark') && !h.includes('loss') &&
-         !h.includes('timestamp') && !h.includes('date') && !h.includes('shift') &&
-         !h.includes('supervisor') && !h.includes('name') && !h.includes('password')){
-        numCols.push({name: rows[hIdx][i]||h, col: i});
-      }
+    rows[hIdx].forEach((h, i) => {
+      if (i <= Math.max(dateCol, shiftCol, supCol) + 0) return;
+      if (!h || !h.trim()) return;
+      const hl = h.toLowerCase();
+      if (hl.includes('remark')||hl.includes('loss')||hl.includes('timestamp')||
+          hl.includes('password')||hl.includes('email')) return;
+      if (i > (Math.max(dateCol,shiftCol,supCol)||3))
+        numCols.push({ name: h, col: i });
     });
 
-    // MTD totals
-    const mtdData = data.filter(r=>isThisMonth(r[dateCol]));
+    const mtdData = data.filter(r => isThisMonth(parseDate(r[dateCol])));
     const colTotals = {};
-    numCols.forEach(c=>{
-      colTotals[c.name] = mtdData.reduce((s,r)=>s+num(r[c.col]),0);
+    numCols.forEach(c => {
+      const t = mtdData.reduce((s,r) => s + num(r[c.col]), 0);
+      if (t > 0) colTotals[c.name] = t;
     });
 
-    // Last entry
-    const allDates = data.map(r=>parseDate(r[dateCol])).filter(Boolean).sort((a,b)=>b-a);
+    const allDates = data.map(r => parseDate(r[dateCol])).filter(Boolean).sort((a,b)=>b-a);
     const lastDate = allDates[0];
-    const gapDays  = lastDate ? daysDiff(lastDate,new Date()) : 99;
+    const gap = lastDate ? daysDiff(lastDate, today) : 99;
+    const mtdTotal = Object.values(colTotals).reduce((s,v)=>s+v,0);
 
     document.getElementById(metaId).textContent =
-      (lastDate?fmtDate(lastDate):'—') + ' | ' + mtdData.length + ' entries MTD';
+      (lastDate ? fmtDate(lastDate) : '—') + ' | MTD: ' + mtdTotal.toLocaleString();
 
-    if(gapDays>=2) addFlag(tabName+': No entry since '+fmtDate(lastDate)+' ('+gapDays+' days)', 'Production team');
+    if (gap >= 2)
+      addFlag(tabName + ': No entry for ' + gap + ' days (last: ' + fmtDate(lastDate) + ')', 'Production team');
 
-    // Show top numeric columns with data
-    const activeCols = Object.entries(colTotals).filter(([,v])=>v>0).slice(0,8);
-    const maxV = Math.max(...activeCols.map(([,v])=>v),1);
+    const activeCols = Object.entries(colTotals).slice(0, 8);
+    const maxV = Math.max(...activeCols.map(([,v])=>v), 1);
 
-    const totalPcs = activeCols.reduce((s,[,v])=>s+v,0);
-
-    document.getElementById(elId).innerHTML =
-      (gapDays>=2?`<div style="padding:7px 10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:4px;font-size:11px;color:var(--red);margin-bottom:10px;font-family:var(--mono)">⚠ Last entry: ${fmtDate(lastDate)} — ${gapDays} days gap</div>`:'') +
+    document.getElementById(bodyId).innerHTML =
+      (gap >= 2 ? `<div style="padding:6px 10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:4px;font-size:11px;color:var(--red);margin-bottom:8px;font-family:var(--mono)">⚠ ${gap} day gap — last: ${fmtDate(lastDate)}</div>` : '') +
       `<div style="display:flex;justify-content:space-between;margin-bottom:10px">
-        <div><div style="font-size:10px;color:var(--muted)">MTD Total</div><div style="font-family:var(--mono);font-size:16px;color:${color}">${totalPcs.toLocaleString()}</div></div>
-        <div style="text-align:right"><div style="font-size:10px;color:var(--muted)">Entries MTD</div><div style="font-family:var(--mono);font-size:16px">${mtdData.length}</div></div>
+        <div><div style="font-size:10px;color:var(--muted)">MTD Total Pcs</div><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:${color}">${mtdTotal.toLocaleString('en-IN')}</div></div>
+        <div style="text-align:right"><div style="font-size:10px;color:var(--muted)">Entries MTD</div><div style="font-family:var(--mono);font-size:18px">${mtdData.length}</div></div>
       </div>` +
       (activeCols.length ?
-        '<div class="bar-chart">' +
-        activeCols.map(([name,val])=>
+        '<div class="bar-chart">' + activeCols.map(([name,val]) =>
           `<div class="bar-row">
-            <div class="bar-label">${name.slice(0,18)}</div>
+            <div class="bar-label">${name.slice(0,20)}</div>
             <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/maxV*100)}%;background:${color}"></div></div>
-            <div class="bar-val" style="color:${color}">${val.toLocaleString()}</div>
+            <div class="bar-val" style="color:${color}">${val.toLocaleString('en-IN')}</div>
           </div>`
-        ).join('') + '</div>' :
-        '<div style="padding:12px;text-align:center;color:var(--muted);font-size:11px">No numeric data found in this tab</div>') +
-      // Recent entries
+        ).join('') + '</div>' : '') +
       '<div class="tw" style="margin-top:10px"><table><thead><tr><th>Date</th><th>Shift</th><th>Supervisor</th>' +
-      (numCols[0]?`<th>${numCols[0].name.slice(0,15)}</th>`:'') +
-      (numCols[1]?`<th>${numCols[1].name.slice(0,15)}</th>`:'') +
+      (numCols[0] ? `<th>${numCols[0].name.slice(0,14)}</th>` : '') +
+      (numCols[1] ? `<th>${numCols[1].name.slice(0,14)}</th>` : '') +
       '</tr></thead><tbody>' +
-      data.slice(-8).reverse().map(r=>
+      data.slice(-7).reverse().map(r =>
         `<tr>
           <td class="tmono">${r[dateCol]||'—'}</td>
-          <td style="font-size:10px;color:var(--muted)">${(r[shiftCol]||'—').slice(0,15)}</td>
+          <td style="font-size:10px;color:var(--muted)">${(r[shiftCol]||'—').slice(0,12)}</td>
           <td style="font-size:11px">${r[supCol]||'—'}</td>
-          ${numCols[0]?`<td class="tmono" style="color:${color}">${num(r[numCols[0].col])>0?num(r[numCols[0].col]).toLocaleString():'—'}</td>`:''}
-          ${numCols[1]?`<td class="tmono" style="color:var(--muted)">${num(r[numCols[1].col])>0?num(r[numCols[1].col]).toLocaleString():'—'}</td>`:''}
+          ${numCols[0] ? `<td class="tmono" style="color:${color}">${num(r[numCols[0].col])>0?num(r[numCols[0].col]).toLocaleString():'—'}</td>` : ''}
+          ${numCols[1] ? `<td class="tmono c-muted">${num(r[numCols[1].col])>0?num(r[numCols[1].col]).toLocaleString():'—'}</td>` : ''}
         </tr>`
       ).join('') + '</tbody></table></div>';
 
-    return {totalPcs, tabName};
+    return { mtdTotal, data, dateCol, numCols };
 
   } catch(e) {
-    document.getElementById(elId).innerHTML = '<div class="err">'+tabName+': '+e.message+'</div>';
-    return {totalPcs:0, tabName};
+    document.getElementById(bodyId).innerHTML = '<div class="err">' + tabName + ': ' + e.message + '</div>';
+    return { mtdTotal: 0, data: [] };
   }
 }
 
-// ── ELECTRICITY ───────────────────────────
-async function loadElectricity(){
-  try{
-    const rows=await fetchCSV(URLS.electricity);
-    const data=rows.slice(1).filter(r=>r[1]&&r[1].trim());
-    const latest=data[data.length-1];
-    const mseb=num(latest[3]);
-    document.getElementById('kpi-mseb').textContent=mseb>0?mseb.toLocaleString():'—';
-    document.getElementById('kpi-mseb-date').textContent=latest[1]||'—';
-    document.getElementById('elecDate').textContent=latest[1];
-    document.getElementById('ibhDate').textContent=latest[1];
+// ═══════════════════════════════════════════
+// RM INWARD
+// ═══════════════════════════════════════════
+async function loadRMInward() {
+  try {
+    const rows = await fetchCSV(SHEETS.rmInward);
+    let hIdx = 0;
+    for (let i=0;i<Math.min(5,rows.length);i++) {
+      if (rows[i].join('').toLowerCase().includes('date')) { hIdx=i; break; }
+    }
+    const headers = rows[hIdx].map(h=>(h||'').toLowerCase());
+    const data = rows.slice(hIdx+1).filter(r=>parseDate(r[findCol(headers,['date'])]));
+    const dateCol = findCol(headers,['date']);
+    const gradeCol = findCol(headers,['grade','material','description','item']);
+    const weightCol = findCol(headers,['weight','ton','kg','qty','quantity']);
+    const valueCol = findCol(headers,['value','amount','rate','price']);
 
-    const mainSecs=[
-      {n:'Forge Shop 1',c:5,col:'var(--cyan)'},{n:'Forge Shop 2',c:6,col:'var(--cyan)'},
-      {n:'Grinding',c:7,col:'var(--blue)'},{n:'Heat Treatment',c:8,col:'var(--amber)'},
-      {n:'Die Shop',c:9,col:'var(--blue)'},{n:'Machine Shop',c:10,col:'var(--green)'},
-      {n:'Compressor 1',c:11,col:'var(--muted)'},{n:'Compressor 2',c:12,col:'var(--muted)'},
-    ];
-    const maxE=Math.max(...mainSecs.map(s=>num(latest[s.c])),1);
-    document.getElementById('elecBody').innerHTML=
-      '<div class="bar-chart">'+
-      mainSecs.map(s=>{const v=num(latest[s.c]);return(
-        `<div class="bar-row"><div class="bar-label">${s.n}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxE*100)}%;background:${s.col}"></div></div>
-        <div class="bar-val" style="color:${s.col}">${v>0?v.toLocaleString():'—'}</div></div>`
-      );}).join('')+'</div>'+
-      `<div class="info-box">Main MSEB: ${mseb.toLocaleString()} units | ${latest[1]} | Op: ${latest[2]||'—'}</div>`;
+    const mtdData = data.filter(r=>isThisMonth(parseDate(r[dateCol])));
+    const mtdWeight = mtdData.reduce((s,r)=>s+num(r[weightCol]),0);
+    const mtdValue = mtdData.reduce((s,r)=>s+num(r[valueCol]),0);
 
-    const ibhSecs=[
-      {n:'IBH 350KW-1',c:13},{n:'IBH 300KW-2',c:14},{n:'IBH 300KW-3',c:15},
-      {n:'IBH 600KW-4',c:16},{n:'IBH 150KW-5',c:17},
-      {n:'HT 90KW Tmp1',c:18},{n:'HT 90KW Tmp2',c:19},
-      {n:'2500T Press',c:20},{n:'1300T Press',c:21},
-    ];
-    const maxI=Math.max(...ibhSecs.map(s=>num(latest[s.c])),1);
-    const ibhTot=ibhSecs.slice(0,5).reduce((s,x)=>s+num(latest[x.c]),0);
-    document.getElementById('ibhBody').innerHTML=
-      '<div class="bar-chart">'+
-      ibhSecs.map(s=>{const v=num(latest[s.c]);return(
-        `<div class="bar-row"><div class="bar-label">${s.n}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxI*100)}%;background:var(--accent)"></div></div>
-        <div class="bar-val c-amber">${v>0?v.toLocaleString():'—'}</div></div>`
-      );}).join('')+'</div>'+
-      `<div class="info-box">IBH Total: ${ibhTot.toLocaleString()} units</div>`;
+    // By grade
+    const byGrade = {};
+    mtdData.forEach(r=>{
+      const g = (r[gradeCol]||'Unknown').trim();
+      byGrade[g] = (byGrade[g]||0) + num(r[weightCol]);
+    });
+    const gradeArr = Object.entries(byGrade).sort((a,b)=>b[1]-a[1]);
+    const maxG = Math.max(...gradeArr.map(([,v])=>v),1);
 
-    // Check gap
-    const lastD=parseDate(data[data.length-1][1]);
-    const gap=lastD?daysDiff(lastD,new Date()):0;
-    if(gap>=2)addFlag('Electricity: No entry since '+fmtDate(lastD)+' ('+gap+' days)','Yeole B S (Store)');
+    document.getElementById('d-rmin-meta').textContent = mtdWeight.toFixed(1) + ' T | ' + crore(mtdValue);
+    document.getElementById('d-rmin-body').innerHTML =
+      `<div style="display:flex;gap:12px;margin-bottom:10px">
+        <div><div style="font-size:10px;color:var(--muted)">MTD Weight</div><div style="font-family:var(--mono);font-size:18px;color:var(--blue)">${mtdWeight.toFixed(1)} T</div></div>
+        <div><div style="font-size:10px;color:var(--muted)">MTD Value</div><div style="font-family:var(--mono);font-size:18px;color:var(--green)">${crore(mtdValue)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted)">Entries</div><div style="font-family:var(--mono);font-size:18px">${mtdData.length}</div></div>
+      </div>` +
+      (gradeArr.length ? '<div class="bar-chart">' + gradeArr.slice(0,8).map(([g,v])=>
+        `<div class="bar-row"><div class="bar-label">${g.slice(0,20)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxG*100)}%;background:var(--blue)"></div></div>
+        <div class="bar-val c-blue">${v.toFixed(1)}T</div></div>`
+      ).join('') + '</div>' : '');
 
-  }catch(e){
-    document.getElementById('elecBody').innerHTML='<div class="err">'+e.message+'</div>';
+    // YTD
+    const ytdData = data.filter(r=>isFY(parseDate(r[dateCol])));
+    const ytdWeight = ytdData.reduce((s,r)=>s+num(r[weightCol]),0);
+    const ytdValue = ytdData.reduce((s,r)=>s+num(r[valueCol]),0);
+    const ytdByMonth = {};
+    ytdData.forEach(r=>{
+      const d=parseDate(r[dateCol]);
+      const k=monthKey(d);
+      ytdByMonth[k]=(ytdByMonth[k]||0)+num(r[weightCol]);
+    });
+    document.getElementById('y-rmin-meta').textContent = ytdWeight.toFixed(1) + ' T YTD';
+    document.getElementById('y-rmin-body').innerHTML = monthBarChart(ytdByMonth,'var(--blue)',' T');
+
+    return { ytdWeight, ytdValue };
+
+  } catch(e) {
+    document.getElementById('d-rmin-body').innerHTML='<div class="err">RM Inward: '+e.message+'</div>';
+    return { ytdWeight:0, ytdValue:0 };
   }
 }
 
-// ── MACHINE SHOP ──────────────────────────
-async function loadMachineShop(){
-  try{
-    const rows=await fetchCSV(URLS.machineShop);
-    const sR=rows[0],cH=rows[1];
-    const data=rows.slice(2).filter(r=>r[1]&&r[1].match&&r[1].match(/\d{2}\/\d{2}\/\d{4}/));
+// ═══════════════════════════════════════════
+// RM CONSUMPTION
+// ═══════════════════════════════════════════
+async function loadRMConsumption() {
+  try {
+    const rows = await fetchCSV(SHEETS.rmConsumption);
+    let hIdx=0;
+    for(let i=0;i<Math.min(5,rows.length);i++){if(rows[i].join('').toLowerCase().includes('date')){hIdx=i;break;}}
+    const headers=rows[hIdx].map(h=>(h||'').toLowerCase());
+    const data=rows.slice(hIdx+1).filter(r=>parseDate(r[findCol(headers,['date'])]));
+    const dateCol=findCol(headers,['date']);
+    const gradeCol=findCol(headers,['grade','material','description']);
+    const weightCol=findCol(headers,['weight','ton','kg','qty','consumed']);
 
-    const allDates=data.map(r=>parseDate(r[1])).filter(Boolean).sort((a,b)=>b-a);
-    const lastDate=allDates[0];
-    const gap=lastDate?daysDiff(lastDate,new Date()):99;
+    const mtdData=data.filter(r=>isThisMonth(parseDate(r[dateCol])));
+    const mtdWeight=mtdData.reduce((s,r)=>s+num(r[weightCol]),0);
 
-    // Find machine sections
-    const machines=[];
-    sR.forEach((h,i)=>{
-      if(!h||!h.trim())return;
-      for(let j=i;j<Math.min(i+8,cH.length);j++){
-        if(cH[j]&&cH[j].toUpperCase().includes('QTY')){
-          if(!machines.find(m=>m.col===j))
-            machines.push({name:h.replace(/^\d+\)\s*/,''),col:j});
-          break;
-        }
-      }
+    const byGrade={};
+    mtdData.forEach(r=>{
+      const g=(r[gradeCol]||'Unknown').trim();
+      byGrade[g]=(byGrade[g]||0)+num(r[weightCol]);
     });
+    const gradeArr=Object.entries(byGrade).sort((a,b)=>b[1]-a[1]);
+    const maxG=Math.max(...gradeArr.map(([,v])=>v),1);
 
-    // MTD total
-    const mtdData=data.filter(r=>isThisMonth(r[1]));
-    const mtdTotal=mtdData.reduce((s,r)=>machines.reduce((ms,m)=>ms+num(r[m.col]),s),0);
-    document.getElementById('kpi-cnc').textContent=mtdTotal>0?mtdTotal.toLocaleString():'—';
+    document.getElementById('d-rmcon-meta').textContent=mtdWeight.toFixed(1)+' T MTD';
+    document.getElementById('d-rmcon-body').innerHTML=
+      `<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--muted)">MTD Consumed</div><div style="font-family:var(--mono);font-size:18px;color:var(--cyan)">${mtdWeight.toFixed(1)} T</div></div>`+
+      (gradeArr.length?'<div class="bar-chart">'+gradeArr.slice(0,8).map(([g,v])=>
+        `<div class="bar-row"><div class="bar-label">${g.slice(0,20)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxG*100)}%;background:var(--cyan)"></div></div>
+        <div class="bar-val c-cyan">${v.toFixed(1)}T</div></div>`
+      ).join('')+'</div>':'');
 
-    document.getElementById('cncMeta').textContent=
-      'Last: '+(lastDate?fmtDate(lastDate):'—')+(gap>=2?' (⚠ '+gap+' days ago)':'');
+    const ytdData=data.filter(r=>isFY(parseDate(r[dateCol])));
+    const ytdWeight=ytdData.reduce((s,r)=>s+num(r[weightCol]),0);
+    const ytdByMonth={};
+    ytdData.forEach(r=>{const d=parseDate(r[dateCol]);const k=monthKey(d);ytdByMonth[k]=(ytdByMonth[k]||0)+num(r[weightCol]);});
+    document.getElementById('y-rmcon-meta').textContent=ytdWeight.toFixed(1)+' T YTD';
+    document.getElementById('y-rmcon-body').innerHTML=monthBarChart(ytdByMonth,'var(--cyan)',' T');
+    document.getElementById('y-rm-consumed').textContent=ytdWeight.toFixed(0)+'T';
 
-    if(gap>=2)addFlag('Machine Shop: No entry since '+fmtDate(lastDate)+' ('+gap+' days)','Supervisor / DME');
-
-    // Last 5 dates grid
-    const recentDates=[...new Set(data.map(r=>r[1]).filter(Boolean))].sort().slice(-5);
-    const byDate={};
-    recentDates.forEach(d=>{byDate[d]={};machines.forEach(m=>{byDate[d][m.name]=0;});});
-    data.filter(r=>recentDates.includes(r[1])).forEach(r=>{
-      machines.forEach(m=>{byDate[r[1]][m.name]=(byDate[r[1]][m.name]||0)+num(r[m.col]);});
-    });
-
-    const activeMachines=machines.filter(m=>recentDates.some(d=>byDate[d][m.name]>0));
-
-    document.getElementById('cncBody').innerHTML=
-      '<div class="tw"><table><thead><tr><th>Machine</th>'+
-      recentDates.map(d=>'<th>'+d+'</th>').join('')+
-      '</tr></thead><tbody>'+
-      activeMachines.map(m=>
-        '<tr><td class="tmono" style="color:var(--blue)">'+m.name+'</td>'+
-        recentDates.map(d=>{
-          const v=byDate[d][m.name];
-          return '<td class="tmono" style="color:'+(v>0?'var(--green)':'var(--muted)')+'">'+
-                 (v>0?v.toLocaleString():'—')+'</td>';
-        }).join('')+'</tr>'
-      ).join('')+'</tbody></table></div>'+
-      `<div class="info-box">MTD total: ${mtdTotal.toLocaleString()} pcs | Machines: ${activeMachines.length}</div>`;
-
-  }catch(e){
-    document.getElementById('cncBody').innerHTML='<div class="err">'+e.message+'</div>';
+    return { ytdWeight };
+  } catch(e) {
+    document.getElementById('d-rmcon-body').innerHTML='<div class="err">RM Consumption: '+e.message+'</div>';
+    return { ytdWeight:0 };
   }
 }
 
-// ── 57F4 ──────────────────────────────────
-async function load57F4(){
-  try{
-    const[oRows,iRows]=await Promise.all([fetchCSV(URLS.f4outward),fetchCSV(URLS.f4inward)]);
-    const oData=oRows.slice(1).filter(r=>r[1]&&r[1].includes('Outward'));
-    const oQtyCols=[6,8,10,12,14,16,18,20,22,24];
-    const oQty=oData.reduce((s,r)=>s+oQtyCols.reduce((qs,c)=>qs+num(r[c]),0),0);
+// ═══════════════════════════════════════════
+// OIL INWARD
+// ═══════════════════════════════════════════
+async function loadOilInward() {
+  try {
+    const rows=await fetchCSV(SHEETS.oilInward);
+    let hIdx=0;
+    for(let i=0;i<Math.min(5,rows.length);i++){if(rows[i].join('').toLowerCase().includes('date')){hIdx=i;break;}}
+    const headers=rows[hIdx].map(h=>(h||'').toLowerCase());
+    const data=rows.slice(hIdx+1).filter(r=>parseDate(r[findCol(headers,['date'])]));
+    const dateCol=findCol(headers,['date']);
+    const litreCol=findCol(headers,['litre','ltr','qty','quantity','volume']);
+    const typeCol=findCol(headers,['type','grade','description','item','oil']);
+    const valueCol=findCol(headers,['value','amount','rate']);
 
-    const iData=iRows.slice(1).filter(r=>{
-      if(!r[5]||!num(r[5]))return false;
-      const d=parseDate(r[0]);
-      if(!d)return false;
-      return(d.getFullYear()===2025&&d.getMonth()>=3)||d.getFullYear()===2026;
+    const mtdData=data.filter(r=>isThisMonth(parseDate(r[dateCol])));
+    const mtdLitres=mtdData.reduce((s,r)=>s+num(r[litreCol]),0);
+    const mtdValue=mtdData.reduce((s,r)=>s+num(r[valueCol]),0);
+
+    document.getElementById('d-oilin-meta').textContent=mtdLitres.toLocaleString()+' L MTD';
+    document.getElementById('d-oilin-body').innerHTML=
+      `<div style="display:flex;gap:12px;margin-bottom:10px">
+        <div><div style="font-size:10px;color:var(--muted)">MTD Litres In</div><div style="font-family:var(--mono);font-size:18px;color:var(--accent)">${mtdLitres.toLocaleString('en-IN')} L</div></div>
+        <div><div style="font-size:10px;color:var(--muted)">MTD Value</div><div style="font-family:var(--mono);font-size:18px;color:var(--green)">${crore(mtdValue)}</div></div>
+      </div>` +
+      '<div class="tw"><table><thead><tr><th>Date</th><th>Type</th><th>Litres</th></tr></thead><tbody>' +
+      data.slice(-6).reverse().map(r=>
+        `<tr><td class="tmono">${r[dateCol]||'—'}</td><td>${r[typeCol]||'—'}</td><td class="tmono c-accent">${num(r[litreCol]).toLocaleString()}</td></tr>`
+      ).join('')+'</tbody></table></div>';
+
+    const ytdData=data.filter(r=>isFY(parseDate(r[dateCol])));
+    const ytdLitres=ytdData.reduce((s,r)=>s+num(r[litreCol]),0);
+    const ytdByMonth={};
+    ytdData.forEach(r=>{const d=parseDate(r[dateCol]);const k=monthKey(d);ytdByMonth[k]=(ytdByMonth[k]||0)+num(r[litreCol]);});
+    document.getElementById('y-oilin-meta').textContent=ytdLitres.toLocaleString()+' L YTD';
+    document.getElementById('y-oilin-body').innerHTML=monthBarChart(ytdByMonth,'var(--accent)',' L');
+
+    return { ytdLitres };
+  } catch(e) {
+    document.getElementById('d-oilin-body').innerHTML='<div class="err">Oil Inward: '+e.message+'</div>';
+    return { ytdLitres:0 };
+  }
+}
+
+// ═══════════════════════════════════════════
+// OIL CONSUMPTION
+// ═══════════════════════════════════════════
+async function loadOilConsumption() {
+  try {
+    const rows=await fetchCSV(SHEETS.oilConsumption);
+    let hIdx=0;
+    for(let i=0;i<Math.min(5,rows.length);i++){if(rows[i].join('').toLowerCase().includes('date')){hIdx=i;break;}}
+    const headers=rows[hIdx].map(h=>(h||'').toLowerCase());
+    const data=rows.slice(hIdx+1).filter(r=>parseDate(r[findCol(headers,['date'])]));
+    const dateCol=findCol(headers,['date']);
+    const litreCol=findCol(headers,['litre','ltr','qty','consumed','used','quantity']);
+    const machineCol=findCol(headers,['machine','press','section','dept']);
+
+    const mtdData=data.filter(r=>isThisMonth(parseDate(r[dateCol])));
+    const mtdLitres=mtdData.reduce((s,r)=>s+num(r[litreCol]),0);
+
+    // Stock approximation from inward - consumption (rough, display in KPI)
+    document.getElementById('d-oil-stock').textContent = '—';
+    document.getElementById('d-oilcon-meta').textContent=mtdLitres.toLocaleString()+' L MTD';
+
+    const byMachine={};
+    mtdData.forEach(r=>{
+      const m=(r[machineCol]||'Other').trim();
+      byMachine[m]=(byMachine[m]||0)+num(r[litreCol]);
     });
-    const iQty=iData.reduce((s,r)=>s+num(r[5]),0);
+    const mArr=Object.entries(byMachine).sort((a,b)=>b[1]-a[1]);
+    const maxM=Math.max(...mArr.map(([,v])=>v),1);
+
+    document.getElementById('d-oilcon-body').innerHTML=
+      `<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--muted)">MTD Consumed</div><div style="font-family:var(--mono);font-size:18px;color:var(--amber)">${mtdLitres.toLocaleString('en-IN')} L</div></div>`+
+      (mArr.length?'<div class="bar-chart">'+mArr.slice(0,8).map(([m,v])=>
+        `<div class="bar-row"><div class="bar-label">${m.slice(0,20)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxM*100)}%;background:var(--amber)"></div></div>
+        <div class="bar-val c-amber">${v.toLocaleString()} L</div></div>`
+      ).join('')+'</div>':'');
+
+    const ytdData=data.filter(r=>isFY(parseDate(r[dateCol])));
+    const ytdLitres=ytdData.reduce((s,r)=>s+num(r[litreCol]),0);
+    const ytdByMonth={};
+    ytdData.forEach(r=>{const d=parseDate(r[dateCol]);const k=monthKey(d);ytdByMonth[k]=(ytdByMonth[k]||0)+num(r[litreCol]);});
+    document.getElementById('y-oilcon-meta').textContent=ytdLitres.toLocaleString()+' L YTD';
+    document.getElementById('y-oilcon-body').innerHTML=monthBarChart(ytdByMonth,'var(--amber)',' L');
+    document.getElementById('y-oil-consumed').textContent=(ytdLitres/1000).toFixed(1)+'K L';
+
+    return { ytdLitres };
+  } catch(e) {
+    document.getElementById('d-oilcon-body').innerHTML='<div class="err">Oil Consumption: '+e.message+'</div>';
+    return { ytdLitres:0 };
+  }
+}
+
+// ═══════════════════════════════════════════
+// DISPATCH
+// ═══════════════════════════════════════════
+async function loadDispatch() {
+  try {
+    const rows=await fetchCSV(SHEETS.dispatch);
+    let hIdx=0;
+    for(let i=0;i<Math.min(5,rows.length);i++){if(rows[i].join('').toLowerCase().includes('date')){hIdx=i;break;}}
+    const headers=rows[hIdx].map(h=>(h||'').toLowerCase());
+    const data=rows.slice(hIdx+1).filter(r=>parseDate(r[findCol(headers,['date'])]));
+    const dateCol=findCol(headers,['date']);
+    const custCol=findCol(headers,['customer','party','buyer','name']);
+    const qtyCol=findCol(headers,['qty','quantity','pcs','pieces']);
+    const valueCol=findCol(headers,['value','amount','invoice','turnover']);
+    const weightCol=findCol(headers,['weight','kg','ton']);
+
+    const mtdData=data.filter(r=>isThisMonth(parseDate(r[dateCol])));
+    const mtdQty=mtdData.reduce((s,r)=>s+num(r[qtyCol]),0);
+    const mtdValue=mtdData.reduce((s,r)=>s+num(r[valueCol]),0);
+    const mtdWeight=mtdData.reduce((s,r)=>s+num(r[weightCol]),0);
+
+    document.getElementById('d-dispatch-mtd').textContent=crore(mtdValue);
+    document.getElementById('d-dispatch-val').textContent=mtdQty.toLocaleString()+' pcs dispatched';
+    document.getElementById('d-dispatch-meta').textContent=mtdData.length+' entries MTD';
+
+    // Customer-wise
+    const byCust={};
+    mtdData.forEach(r=>{
+      const c=(r[custCol]||'Unknown').trim();
+      byCust[c]=(byCust[c]||0)+num(r[valueCol]);
+    });
+    const custArr=Object.entries(byCust).sort((a,b)=>b[1]-a[1]);
+    const maxC=Math.max(...custArr.map(([,v])=>v),1);
+
+    document.getElementById('d-dispatch-body').innerHTML=
+      `<div class="grid4" style="margin-bottom:12px">
+        <div class="stat-box"><div class="stat-box-label">MTD Value</div><div class="stat-box-val c-green">${crore(mtdValue)}</div></div>
+        <div class="stat-box"><div class="stat-box-label">MTD Pcs</div><div class="stat-box-val">${mtdQty.toLocaleString('en-IN')}</div></div>
+        <div class="stat-box"><div class="stat-box-label">MTD Tons</div><div class="stat-box-val c-blue">${mtdWeight.toFixed(1)}</div></div>
+        <div class="stat-box"><div class="stat-box-label">Customers</div><div class="stat-box-val">${custArr.length}</div></div>
+      </div>` +
+      (custArr.length?'<div class="bar-chart">'+custArr.slice(0,10).map(([c,v])=>
+        `<div class="bar-row"><div class="bar-label">${c.slice(0,22)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxC*100)}%;background:var(--green)"></div></div>
+        <div class="bar-val c-green">${crore(v)}</div></div>`
+      ).join('')+'</div>':'');
+
+    // YTD
+    const ytdData=data.filter(r=>isFY(parseDate(r[dateCol])));
+    const ytdValue=ytdData.reduce((s,r)=>s+num(r[valueCol]),0);
+    const ytdWeight=ytdData.reduce((s,r)=>s+num(r[weightCol]),0);
+    const ytdByMonth={};
+    ytdData.forEach(r=>{const d=parseDate(r[dateCol]);const k=monthKey(d);ytdByMonth[k]=(ytdByMonth[k]||0)+num(r[valueCol]);});
+    document.getElementById('y-turnover').textContent=crore(ytdValue);
+    document.getElementById('y-dispatch-meta').textContent=crore(ytdValue)+' YTD';
+    document.getElementById('y-dispatch-body').innerHTML=monthBarChart(ytdByMonth,'var(--green)');
+    document.getElementById('y-realisation').textContent=ytdWeight>0?Math.round(ytdValue/ytdWeight).toLocaleString('en-IN'):'—';
+
+    return { ytdValue, ytdWeight };
+  } catch(e) {
+    document.getElementById('d-dispatch-body').innerHTML='<div class="err">Dispatch: '+e.message+'</div>';
+    return { ytdValue:0, ytdWeight:0 };
+  }
+}
+
+// ═══════════════════════════════════════════
+// 57F4
+// ═══════════════════════════════════════════
+async function load57F4() {
+  try {
+    const [oRows,iRows]=await Promise.all([
+      fetchCSV(SHEETS.f4outward),
+      fetchCSV(SHEETS.f4inward)
+    ]);
+
+    // Outward
+    let ohIdx=0;
+    for(let i=0;i<Math.min(5,oRows.length);i++){if(oRows[i].join('').toLowerCase().includes('date')){ohIdx=i;break;}}
+    const oH=oRows[ohIdx].map(h=>(h||'').toLowerCase());
+    const oData=oRows.slice(ohIdx+1).filter(r=>parseDate(r[findCol(oH,['date'])]));
+    const oDateCol=findCol(oH,['date']);
+    const oVendCol=findCol(oH,['vendor','party','name','supplier']);
+    const oQtyCol=findCol(oH,['qty','quantity','pcs','pieces']);
+
+    // Inward
+    let ihIdx=0;
+    for(let i=0;i<Math.min(5,iRows.length);i++){if(iRows[i].join('').toLowerCase().includes('date')){ihIdx=i;break;}}
+    const iH=iRows[ihIdx].map(h=>(h||'').toLowerCase());
+    const iData=iRows.slice(ihIdx+1).filter(r=>parseDate(r[findCol(iH,['date'])]));
+    const iDateCol=findCol(iH,['date']);
+    const iVendCol=findCol(iH,['vendor','party','name','supplier']);
+    const iQtyCol=findCol(iH,['qty','quantity','pcs','pieces']);
+
+    const fyOut=oData.filter(r=>isFY(parseDate(r[oDateCol])));
+    const fyIn=iData.filter(r=>isFY(parseDate(r[iDateCol])));
+
+    const oQty=fyOut.reduce((s,r)=>s+num(r[oQtyCol]),0);
+    const iQty=fyIn.reduce((s,r)=>s+num(r[iQtyCol]),0);
     const gap=oQty-iQty;
     const pct=oQty>0?(iQty/oQty*100).toFixed(1):0;
 
-    const iDates=iData.map(r=>parseDate(r[0])).filter(Boolean).sort((a,b)=>b-a);
-    const lastIn=iDates[0];
+    // Vendor balance
+    const vBal={};
+    fyOut.forEach(r=>{const v=(r[oVendCol]||'?').trim();vBal[v]=(vBal[v]||0)+num(r[oQtyCol]);});
+    fyIn.forEach(r=>{const v=(r[iVendCol]||'?').trim();vBal[v]=(vBal[v]||0)-num(r[iQtyCol]);});
+    const outstanding=Object.entries(vBal).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
 
-    const vg={};
-    oData.forEach(r=>{const v=(r[3]||'?').trim();vg[v]=(vg[v]||0)+oQtyCols.reduce((s,c)=>s+num(r[c]),0);});
-    iData.forEach(r=>{const v=(r[1]||'?').trim();vg[v]=(vg[v]||0)-num(r[5]);});
-    const out=Object.entries(vg).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    const lastIn=fyIn.map(r=>parseDate(r[iDateCol])).filter(Boolean).sort((a,b)=>b-a)[0];
+    if(gap>0) addFlag('57F4: '+gap.toLocaleString()+' pcs with vendors — reconcile by Mar 31','Vendor / Store');
 
-    if(gap>0)addFlag('57F4: '+gap.toLocaleString()+' pcs with vendors — last return '+fmtDate(lastIn),'Vendor / Store');
+    // MTD
+    const mtdOut=oData.filter(r=>isThisMonth(parseDate(r[oDateCol])));
+    const mtdIn=iData.filter(r=>isThisMonth(parseDate(r[iDateCol])));
+    const mtdOutQty=mtdOut.reduce((s,r)=>s+num(r[oQtyCol]),0);
+    const mtdInQty=mtdIn.reduce((s,r)=>s+num(r[iQtyCol]),0);
 
-    document.getElementById('f4Meta').textContent=oData.length+' out | '+iData.length+' in (FY2526)';
-    document.getElementById('f4Body').innerHTML=
+    document.getElementById('d-f4-meta').textContent=fyOut.length+' out | '+fyIn.length+' in FY';
+    document.getElementById('d-f4-body').innerHTML=
       `<div class="grid4" style="margin-bottom:12px">
-        <div class="stat-box"><div class="stat-box-label">Sent Out</div><div class="stat-box-val">${oQty.toLocaleString()}</div><div class="stat-box-sub">pcs total</div></div>
-        <div class="stat-box"><div class="stat-box-label">Returned</div><div class="stat-box-val" style="color:var(--green)">${iQty.toLocaleString()}</div><div class="stat-box-sub">pcs FY2526</div></div>
-        <div class="stat-box"><div class="stat-box-label">With Vendors</div><div class="stat-box-val" style="color:var(--amber)">${gap>0?gap.toLocaleString():'0'}</div><div class="stat-box-sub">${pct}% returned</div></div>
-        <div class="stat-box"><div class="stat-box-label">Last Return</div><div class="stat-box-val" style="font-size:14px;color:var(--red)">${lastIn?fmtDate(lastIn):'—'}</div><div class="stat-box-sub">date</div></div>
-      </div>`+
-      (out.length?
-        '<div class="tw"><table><thead><tr><th>Vendor</th><th>Outstanding Pcs</th></tr></thead><tbody>'+
-        out.slice(0,8).map(([v,q])=>`<tr><td>${v}</td><td class="tmono c-amber">${q.toLocaleString()}</td></tr>`).join('')+
-        '</tbody></table></div>':'')+
-      `<div class="info-box">Reconcile before March 31 | Last outward: ${oData.length?oData[oData.length-1][2]:'—'}</div>`;
+        <div class="stat-box"><div class="stat-box-label">FY Sent Out</div><div class="stat-box-val">${oQty.toLocaleString()}</div><div class="stat-box-sub">pcs</div></div>
+        <div class="stat-box"><div class="stat-box-label">FY Returned</div><div class="stat-box-val c-green">${iQty.toLocaleString()}</div><div class="stat-box-sub">${pct}%</div></div>
+        <div class="stat-box"><div class="stat-box-label">With Vendors</div><div class="stat-box-val c-amber">${gap>0?gap.toLocaleString():'0'}</div><div class="stat-box-sub">outstanding</div></div>
+        <div class="stat-box"><div class="stat-box-label">Last Return</div><div class="stat-box-val" style="font-size:14px;color:var(--red)">${lastIn?fmtDate(lastIn):'—'}</div></div>
+      </div>` +
+      (outstanding.length?
+        '<div class="tw"><table><thead><tr><th>Vendor</th><th>Outstanding Pcs</th><th>Status</th></tr></thead><tbody>' +
+        outstanding.slice(0,8).map(([v,q])=>
+          `<tr><td>${v}</td><td class="tmono c-amber">${q.toLocaleString()}</td><td><span class="chip chip-red">PENDING</span></td></tr>`
+        ).join('')+'</tbody></table></div>':'') +
+      `<div class="info-box">MTD: ${mtdOutQty.toLocaleString()} out, ${mtdInQty.toLocaleString()} returned | Reconcile before March 31</div>`;
 
-  }catch(e){
-    document.getElementById('f4Body').innerHTML='<div class="err">'+e.message+'</div>';
+    // YTD
+    document.getElementById('y-f4-meta').textContent=crore(gap)+' pcs balance YTD';
+    document.getElementById('y-f4-body').innerHTML=document.getElementById('d-f4-body').innerHTML;
+
+  } catch(e) {
+    document.getElementById('d-f4-body').innerHTML='<div class="err">57F4: '+e.message+'</div>';
   }
 }
 
-// ── DATA ENTRY STATUS ─────────────────────
-async function loadStatus(){
-  const today=new Date();
-  const last7=Array.from({length:7},(_,i)=>{const d=new Date(today);d.setDate(d.getDate()-i);return d;});
+// ═══════════════════════════════════════════
+// OUTSTANDING / AR
+// ═══════════════════════════════════════════
+async function loadOutstanding() {
+  try {
+    const rows=await fetchCSV(SHEETS.outstanding);
+    let hIdx=0;
+    for(let i=0;i<Math.min(5,rows.length);i++){if(rows[i].join('').toLowerCase().match(/customer|party|name|amount/)){hIdx=i;break;}}
+    const headers=rows[hIdx].map(h=>(h||'').toLowerCase());
+    const data=rows.slice(hIdx+1).filter(r=>r.some(c=>c&&c.trim()));
+    const custCol=findCol(headers,['customer','party','name','buyer']);
+    const amtCol=findCol(headers,['amount','balance','outstanding','value','due']);
+    const overdueCol=findCol(headers,['overdue','pending','old']);
 
-  const sources=[
-    {name:'Electricity',  url:URLS.electricity, dateCol:1, who:'Yeole B S (Store)',       skip:1},
-    {name:'Machine Shop', url:URLS.machineShop,  dateCol:1, who:'DME / Supervisor',        skip:2, filter:r=>r[1]&&r[1].match&&r[1].match(/\d{2}\/\d{2}\/\d{4}/)},
-    {name:'57F4 Outward', url:URLS.f4outward,    dateCol:2, who:'Gate / Store',            skip:1, filter:r=>r[1]&&r[1].includes('Outward')},
-    {name:'Forge Shop',   url:URLS.forgeShop,    dateCol:1, who:'Production team (Forge)', skip:1},
-    {name:'Cutting',      url:URLS.cutting,      dateCol:1, who:'Production team (Cut)',   skip:1},
-    {name:'Press Shop',   url:URLS.pressShop,    dateCol:1, who:'Production team (Press)', skip:1},
-  ];
+    const byCustomer={};
+    data.forEach(r=>{
+      const c=(r[custCol]||'Unknown').trim();
+      if(!c||c==='Unknown') return;
+      byCustomer[c]=(byCustomer[c]||0)+num(r[amtCol]);
+    });
+    const custArr=Object.entries(byCustomer).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    const total=custArr.reduce((s,[,v])=>s+v,0);
+    const maxC=Math.max(...custArr.map(([,v])=>v),1);
 
-  const results=await Promise.allSettled(sources.map(s=>fetchCSV(s.url)));
-  let missingToday=0;
+    document.getElementById('y-overdue').textContent=crore(total);
+    document.getElementById('y-overdue-sub').textContent=custArr.length+' customers';
+    document.getElementById('y-ar-meta').textContent='Total: '+crore(total);
 
-  const tableRows=sources.map((s,i)=>{
-    if(results[i].status==='rejected')
-      return{name:s.name,who:s.who,days:last7.map(()=>'error')};
+    if(total>5e6) addFlag('AR Overdue: '+crore(total)+' outstanding — follow up required','Deepak / Sanjay');
 
-    let data=results[i].value.slice(s.skip||1);
-    if(s.filter)data=data.filter(s.filter);
+    document.getElementById('y-ar-body').innerHTML=
+      `<div style="display:flex;gap:12px;margin-bottom:12px">
+        <div><div style="font-size:10px;color:var(--muted)">Total Outstanding</div><div style="font-family:var(--mono);font-size:20px;color:var(--red)">${crore(total)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted)">Customers</div><div style="font-family:var(--mono);font-size:20px">${custArr.length}</div></div>
+      </div>` +
+      (custArr.length?'<div class="bar-chart">'+custArr.slice(0,12).map(([c,v])=>
+        `<div class="bar-row"><div class="bar-label">${c.slice(0,22)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxC*100)}%;background:var(--red)"></div></div>
+        <div class="bar-val c-red">${crore(v)}</div></div>`
+      ).join('')+'</div>':'<div style="padding:12px;text-align:center;color:var(--muted)">No outstanding data found</div>');
 
-    const entryDates=new Set();
-    data.forEach(r=>{const d=parseDate(r[s.dateCol]);if(d)entryDates.add(fmtDate(d));});
+  } catch(e) {
+    document.getElementById('y-ar-body').innerHTML='<div class="err">Outstanding: '+e.message+'</div>';
+  }
+}
 
-    const dayStats=last7.map((d,idx)=>{
-      const ds=fmtDate(d);
-      const isSun=d.getDay()===0;
-      const has=entryDates.has(ds);
-      if(idx===0&&!has&&!isSun)missingToday++;
-      return{ds,has,isSun};
+// ═══════════════════════════════════════════
+// MANPOWER
+// ═══════════════════════════════════════════
+async function loadManpower() {
+  try {
+    const rows=await fetchCSV(SHEETS.manpower);
+    let hIdx=0;
+    for(let i=0;i<Math.min(5,rows.length);i++){if(rows[i].join('').toLowerCase().includes('date')){hIdx=i;break;}}
+    const headers=rows[hIdx].map(h=>(h||'').toLowerCase());
+    const data=rows.slice(hIdx+1).filter(r=>parseDate(r[findCol(headers,['date'])]));
+    const dateCol=findCol(headers,['date']);
+    const totalCol=findCol(headers,['total','count','present','headcount','manpower']);
+    const deptCol=findCol(headers,['dept','department','section','area']);
+
+    // Last 7 days
+    const last7=[];
+    for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);last7.push(d);}
+
+    const byDate={};
+    data.forEach(r=>{
+      const d=parseDate(r[dateCol]);
+      if(!d) return;
+      const k=fmtDate(d);
+      byDate[k]=(byDate[k]||0)+num(r[totalCol]);
     });
 
-    const todayStr=fmtDate(today);
-    if(!entryDates.has(todayStr)&&today.getDay()!==0){
-      const allD=data.map(r=>parseDate(r[s.dateCol])).filter(Boolean).sort((a,b)=>b-a);
-      const lastD=allD[0];
-      const g=lastD?daysDiff(lastD,today):'?';
-      addFlag(s.name+': No entry today — last was '+(lastD?fmtDate(lastD):'unknown')+' ('+g+' days ago)',s.who);
-    }
+    const allDates=data.map(r=>parseDate(r[dateCol])).filter(Boolean).sort((a,b)=>b-a);
+    const lastDate=allDates[0];
+    const gap=lastDate?daysDiff(lastDate,today):99;
+    if(gap>=2) addFlag('Manpower: No entry since '+fmtDate(lastDate)+' ('+gap+' days)','HR / Store');
 
-    return{name:s.name,who:s.who,days:dayStats};
+    document.getElementById('d-mp-meta').textContent=lastDate?'Last: '+fmtDate(lastDate):'No data';
+    document.getElementById('d-mp-body').innerHTML=
+      '<div class="tw"><table><thead><tr><th>Date</th><th>Day</th><th>Total Present</th><th>Status</th></tr></thead><tbody>'+
+      last7.map(d=>{
+        const k=fmtDate(d);
+        const v=byDate[k]||0;
+        const isSun=d.getDay()===0;
+        const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        return `<tr>
+          <td class="tmono">${k}</td>
+          <td style="color:var(--muted)">${days[d.getDay()]}</td>
+          <td class="tmono" style="color:${v>0?'var(--green)':'var(--red)'}">${v>0?v:'—'}</td>
+          <td>${isSun?'<span class="chip chip-blue">Sun</span>':v>0?'<span class="chip chip-green">✓</span>':'<span class="chip chip-red">Missing</span>'}</td>
+        </tr>`;
+      }).join('')+'</tbody></table></div>';
+
+    // YTD avg
+    const ytdData=data.filter(r=>isFY(parseDate(r[dateCol])));
+    const ytdByMonth={};
+    ytdData.forEach(r=>{
+      const d=parseDate(r[dateCol]);const k=monthKey(d);
+      if(!ytdByMonth[k]) ytdByMonth[k]={sum:0,count:0};
+      ytdByMonth[k].sum+=num(r[totalCol]);
+      ytdByMonth[k].count++;
+    });
+    const avgByMonth={};
+    Object.entries(ytdByMonth).forEach(([k,{sum,count}])=>{avgByMonth[k]=count>0?Math.round(sum/count):0;});
+    document.getElementById('y-mp-meta').textContent='Monthly avg headcount';
+    document.getElementById('y-mp-body').innerHTML=monthBarChart(avgByMonth,'var(--purple)',' avg');
+
+  } catch(e) {
+    document.getElementById('d-mp-body').innerHTML='<div class="err">Manpower: '+e.message+'</div>';
+  }
+}
+
+// ═══════════════════════════════════════════
+// DATA ENTRY STATUS CHECK
+// ═══════════════════════════════════════════
+async function loadStatus() {
+  const sources = [
+    { name:'Electricity',    id:SHEETS.electricity,    tab:null,                    dateCol:1, who:'Store',        skip:1 },
+    { name:'Forge Shop PMS', id:SHEETS.pmsForge,       tab:PMS_TABS.forge,          dateCol:1, who:'Forge Supvr',  skip:1 },
+    { name:'Press Shop PMS', id:SHEETS.pmsForge,       tab:PMS_TABS.press,          dateCol:1, who:'Press Supvr',  skip:1 },
+    { name:'Cutting PMS',    id:SHEETS.pmsForge,       tab:PMS_TABS.cutting,        dateCol:1, who:'Cut Supvr',    skip:1 },
+    { name:'HT Shop PMS',    id:SHEETS.pmsForge,       tab:PMS_TABS.ht,             dateCol:1, who:'HT Supvr',     skip:1 },
+    { name:'Oil Consumption',id:SHEETS.oilConsumption, tab:null,                    dateCol:0, who:'Store/Maint',  skip:1 },
+    { name:'Manpower',       id:SHEETS.manpower,       tab:null,                    dateCol:0, who:'HR',           skip:1 },
+  ];
+
+  const results = await Promise.allSettled(sources.map(s => fetchCSV(s.id, s.tab)));
+  let missingToday = 0;
+
+  const last7 = [];
+  for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);last7.push(d);}
+
+  const tableRows = sources.map((s,i) => {
+    if (results[i].status === 'rejected')
+      return { name:s.name, who:s.who, days:last7.map(()=>({ds:'',has:false,isSun:false,err:true})) };
+
+    const data = results[i].value.slice(s.skip||1);
+    const entryDates = new Set();
+    data.forEach(r => {
+      const d = parseDate(r[s.dateCol]);
+      if(d) entryDates.add(fmtDate(d));
+    });
+
+    const dayStats = last7.map((d,idx) => {
+      const ds = fmtDate(d);
+      const isSun = d.getDay() === 0;
+      const has = entryDates.has(ds);
+      if(idx===0 && !has && !isSun) missingToday++;
+      return { ds, has, isSun };
+    });
+
+    return { name:s.name, who:s.who, days:dayStats };
   });
 
-  document.getElementById('kpi-missing').textContent=missingToday;
-  document.getElementById('statusBody').innerHTML=
-    '<div class="tw"><table><thead><tr><th>Form</th><th>Responsible</th>'+
-    last7.map(d=>'<th>'+fmtDate(d)+(d.getDay()===0?' ☀':'')+'</th>').join('')+
-    '</tr></thead><tbody>'+
+  document.getElementById('d-missing').textContent = missingToday;
+  document.getElementById('d-status-body').innerHTML =
+    '<div class="tw"><table><thead><tr><th>Form</th><th>Owner</th>' +
+    last7.map(d=>'<th>'+fmtDate(d)+(d.getDay()===0?' ☀':'')+'</th>').join('') +
+    '</tr></thead><tbody>' +
     tableRows.map(row=>
       '<tr><td style="font-weight:500">'+row.name+'</td>'+
       '<td style="font-size:10px;color:var(--muted)">'+row.who+'</td>'+
       row.days.map(d=>{
-        if(d==='error')return'<td><span class="chip chip-amber">Err</span></td>';
-        if(d.isSun)return'<td><span class="chip" style="background:rgba(74,82,104,.2);color:var(--muted)">Sun</span></td>';
-        return'<td><span class="chip '+(d.has?'chip-green':'chip-red')+'">'+(d.has?'✓':'✗')+'</span></td>';
+        if(d.err) return '<td><span class="chip chip-amber">Err</span></td>';
+        if(d.isSun) return '<td><span class="chip" style="background:rgba(74,82,104,.15);color:var(--muted)">Sun</span></td>';
+        return '<td><span class="chip '+(d.has?'chip-green':'chip-red')+'">'+(d.has?'✓':'✗')+'</span></td>';
       }).join('')+'</tr>'
-    ).join('')+'</tbody></table></div>';
+    ).join('') + '</tbody></table></div>';
 }
 
-// ── LOAD ALL ──────────────────────────────
-async function loadAll(){
-  flags.clear();
+// ═══════════════════════════════════════════
+// YTD CROSS-CALCULATIONS
+// ═══════════════════════════════════════════
+function calcYTDRatios(rmTons, elecUnits, oilLitres, dispatchTons) {
+  if(rmTons > 0) {
+    document.getElementById('y-rm-per-ton').textContent = '—'; // needs RM value
+  }
+  if(elecUnits > 0 && dispatchTons > 0) {
+    document.getElementById('y-elec-per-ton').textContent =
+      (elecUnits/dispatchTons).toFixed(0);
+  }
+  if(oilLitres > 0 && dispatchTons > 0) {
+    document.getElementById('y-oil-per-ton').textContent =
+      (oilLitres/dispatchTons).toFixed(1) + ' L';
+  }
+}
+
+// ═══════════════════════════════════════════
+// YTD PRODUCTION
+// ═══════════════════════════════════════════
+async function loadYTDProduction() {
+  try {
+    const [forgeR, pressR] = await Promise.all([
+      fetchCSV(SHEETS.pmsForge, PMS_TABS.forge),
+      fetchCSV(SHEETS.pmsForge, PMS_TABS.press),
+    ]);
+
+    let total = 0;
+    const byMonth = {};
+
+    [forgeR, pressR].forEach(rows => {
+      let hIdx=0;
+      for(let i=0;i<Math.min(5,rows.length);i++){if(rows[i].join('').toLowerCase().match(/date/)){hIdx=i;break;}}
+      const headers=rows[hIdx].map(h=>(h||'').toLowerCase());
+      const dateCol=findCol(headers,['date']);
+      const data=rows.slice(hIdx+1).filter(r=>isFY(parseDate(r[dateCol])));
+
+      // Find numeric cols
+      const numCols=[];
+      rows[hIdx].forEach((h,i)=>{
+        if(i<=dateCol+2||!h) return;
+        const hl=h.toLowerCase();
+        if(hl.includes('remark')||hl.includes('timestamp')||hl.includes('shift')||hl.includes('supervisor')) return;
+        numCols.push(i);
+      });
+
+      data.forEach(r=>{
+        const d=parseDate(r[dateCol]);
+        if(!d) return;
+        const k=monthKey(d);
+        const v=numCols.reduce((s,c)=>s+num(r[c]),0);
+        byMonth[k]=(byMonth[k]||0)+v;
+        total+=v;
+      });
+    });
+
+    document.getElementById('y-prod-total').textContent=(total/1000).toFixed(0)+'K';
+    document.getElementById('y-prod-meta').textContent=total.toLocaleString()+' pcs YTD';
+    document.getElementById('y-prod-body').innerHTML=monthBarChart(byMonth,'var(--green)',' pcs');
+
+    return total;
+  } catch(e) {
+    document.getElementById('y-prod-body').innerHTML='<div class="err">YTD Production: '+e.message+'</div>';
+    return 0;
+  }
+}
+
+// ═══════════════════════════════════════════
+// TAB SWITCH
+// ═══════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+// LOAD ALL
+// ═══════════════════════════════════════════
+async function loadAll() {
+  // Reset flags
+  flagSet.clear();
   document.getElementById('flagsGrid').innerHTML='';
   document.getElementById('flagsBanner').style.display='none';
   document.getElementById('lastUpdate').textContent=
     'Updated: '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+' IST';
 
-  // Load all in parallel
+  // Daily tab — PMS all shops
   const [forge,cutting,press,ht] = await Promise.all([
-    loadPMSTab(URLS.forgeShop,  'forgeBody',  'forgeMeta',   'Forge Shop',  'var(--accent)'),
-    loadPMSTab(URLS.cutting,    'cuttingBody','cuttingMeta', 'Cutting',     'var(--amber)'),
-    loadPMSTab(URLS.pressShop,  'pressBody',  'pressMeta',   'Press Shop',  'var(--blue)'),
-    loadPMSTab(URLS.htShop,     'htBody',     'htMeta',      'HT Shop',     '#c4b5fd'),
+    loadPMSTab(PMS_TABS.forge,  'd-forge-body', 'd-forge-meta', 'var(--accent)'),
+    loadPMSTab(PMS_TABS.cutting,'d-cut-body',   'd-cut-meta',   'var(--amber)'),
+    loadPMSTab(PMS_TABS.press,  'd-press-body', 'd-press-meta', 'var(--blue)'),
+    loadPMSTab(PMS_TABS.ht,     'd-ht-body',    'd-ht-meta',    'var(--purple)'),
   ]);
+  document.getElementById('d-forge-mtd').textContent =
+    ((forge.mtdTotal||0)+(press.mtdTotal||0)).toLocaleString('en-IN');
 
-  // Update forge KPI
-  document.getElementById('kpi-forge').textContent =
-    (forge.totalPcs+press.totalPcs) > 0 ?
-    (forge.totalPcs+press.totalPcs).toLocaleString() : '—';
+  // All other loaders in parallel
+  const [elec, rmIn, rmCon, oilIn, oilCon, dispatch] = await Promise.all([
+    loadElectricity(),
+    loadRMInward(),
+    loadRMConsumption(),
+    loadOilInward(),
+    loadOilConsumption(),
+    loadDispatch(),
+  ]);
 
   await Promise.allSettled([
-    loadElectricity(),
-    loadMachineShop(),
     load57F4(),
+    loadOutstanding(),
+    loadManpower(),
     loadStatus(),
+    loadYTDProduction(),
   ]);
+
+  // Cross-calc YTD ratios
+  calcYTDRatios(
+    rmCon?.ytdWeight || 0,
+    elec?.ytdTotal || 0,
+    oilCon?.ytdLitres || 0,
+    dispatch?.ytdWeight || 0
+  );
+
+  // RM per ton (value / weight)
+  if(rmIn?.ytdValue > 0 && rmCon?.ytdWeight > 0) {
+    document.getElementById('y-rm-per-ton').textContent =
+      '₹'+(rmIn.ytdValue/rmCon.ytdWeight/1000).toFixed(1)+'K';
+  }
 }
 
 loadAll();
-setInterval(loadAll,5*60*1000);
+setInterval(loadAll, 5*60*1000);
 </script>
 </body>
 </html>
